@@ -1,3 +1,4 @@
+import { BOARD_WIDTH } from "../types/game-options";
 import { Board, GameState, PieceData, Rotation } from "../types/game-state";
 import { I_KICKS, Piece, PIECE_MATRICES, WALLKICKS } from "./piece";
 
@@ -31,9 +32,7 @@ const checkCollision = (board: Board, pieceData: PieceData) => {
       let boardX = pieceData.x + x;
       if (boardX < 0 || boardX >= 10) return true;
 
-      if ((boardRow & (1 << boardX)) != 0) {
-        return true;
-      }
+      if (boardRow?.[boardX]) return true;
     }
   }
 
@@ -100,12 +99,13 @@ const placePiece = (board: Board, pieceData: PieceData) => {
     for (let pieceX = 0; pieceX < row.length; pieceX++) {
       const cell = row[pieceX];
       if (!cell) continue;
-
       // Expand board if needed
-      while (boardY >= board.length) board.push(0);
+      while (boardY >= board.length) {
+        board.push(new Array(BOARD_WIDTH).fill(null));
+      }
 
       const boardX = pieceData.x + pieceX;
-      board[boardY] |= 1 << boardX;
+      board[boardY][boardX] = pieceData.piece;
     }
   }
 

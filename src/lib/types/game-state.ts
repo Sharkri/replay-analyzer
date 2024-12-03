@@ -1,8 +1,8 @@
-import { Piece } from "../engine/piece";
+import { Block, Piece } from "../engine/piece";
 
 export const PIECE_BAG: Piece[] = ["Z", "L", "O", "S", "I", "J", "T"];
 
-export type Board = number[];
+export type Board = (Block | null)[][];
 export type Rotation = 0 | 1 | 2 | 3;
 
 export type GameState = {
