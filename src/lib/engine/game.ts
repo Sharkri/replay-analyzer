@@ -183,15 +183,15 @@ export const hold = (state: GameState) => {
   if (state.dead) throw new Error("Cannot act when dead");
   if (!state.canHold) return;
 
-  // Swap current and held
-  state.held = state.current.piece;
-
-  let newPiece = state.held
+  let { collides, piece_data } = state.held
     ? spawnPiece(state.board, state.held)
     : spawnPiece(state.board, state.queue.shift()!);
 
-  state.dead = newPiece.collides;
-  state.current = newPiece.piece_data;
+  // Swap current and held
+  state.held = state.current.piece;
+
+  state.dead = collides;
+  state.current = piece_data;
 
   state.canHold = false;
 };

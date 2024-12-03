@@ -1,6 +1,6 @@
 import { PIECE_SPAWN } from "@/lib/engine/game";
 import { Block, BLOCK_COLORS, PIECE_MATRICES } from "@/lib/engine/piece";
-import { BLOCK_SIZE } from "@/lib/types/game-options";
+import { BLOCK_SIZE, X_OFFSET } from "@/lib/types/game-options";
 import { PieceData } from "@/lib/types/game-state";
 import { Graphics } from "@pixi/react";
 
@@ -21,7 +21,7 @@ export const BoardMino = ({
         g.drawRect(0, 0, BLOCK_SIZE - 1, BLOCK_SIZE);
         g.endFill();
       }}
-      x={x * BLOCK_SIZE}
+      x={x * BLOCK_SIZE + X_OFFSET}
       y={y * BLOCK_SIZE}
     />
   );

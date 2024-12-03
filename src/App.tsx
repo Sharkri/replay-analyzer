@@ -52,6 +52,16 @@ function App() {
         >
           hd
         </Button>
+        <Button
+          onClick={() => {
+            if (gameState) {
+              const xd = executeCommand("hold", gameState);
+              setGameState(xd);
+            }
+          }}
+        >
+          hodl
+        </Button>
 
         {gameState && <BoardCanvas gameState={gameState} />}
       </div>
