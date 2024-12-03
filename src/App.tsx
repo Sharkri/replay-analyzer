@@ -4,7 +4,7 @@ import { TTRM } from "./lib/types/ttrm";
 import TTRMInput from "./components/main/ttrm-input";
 import BoardCanvas from "./components/main/board-canvas";
 import { GameState } from "./lib/types/game-state";
-import { createGameState } from "./lib/engine/Game";
+import { createGameState } from "./lib/engine/game";
 
 function App() {
   const [ttrm, setTTRM] = useState<null | TTRM>(null);

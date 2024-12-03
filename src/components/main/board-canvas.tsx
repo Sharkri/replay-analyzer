@@ -1,50 +1,12 @@
-import { PIECE_SPAWN } from "@/lib/engine/game";
-import { Piece, PIECE_COLORS, PIECE_MATRICES } from "@/lib/engine/piece";
-import { GameState, PieceData } from "@/lib/types/game-state";
+import {
+  BLOCK_SIZE,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+} from "@/lib/types/game-options";
+import { GameState } from "@/lib/types/game-state";
 import { Stage, Graphics } from "@pixi/react";
-
-const BLOCK_SIZE = 40;
-const BOARD_WIDTH = 10;
-const BOARD_HEIGHT = 20;
-
-const BoardMino = ({ x, y, piece }: { x: number; y: number; piece: Piece }) => {
-  return (
-    <Graphics
-      draw={(g) => {
-        g.clear();
-        g.beginFill(PIECE_COLORS[piece]);
-        g.drawRect(0, 0, BLOCK_SIZE - 1, BLOCK_SIZE);
-        g.endFill();
-      }}
-      x={x}
-      y={y}
-    />
-  );
-};
-
-const BoardPiece = ({ pieceData }: { pieceData: PieceData }) => {
-  const { piece, rotation, x, y } = pieceData;
-
-  const shape = PIECE_MATRICES[piece][rotation];
-
-  return shape.map((row, pieceY) =>
-    row.map((cell, pieceX) => {
-      if (cell === 0) return null;
-
-      let blockX = pieceX * BLOCK_SIZE + x * BLOCK_SIZE;
-      let blockY = pieceY * BLOCK_SIZE + (PIECE_SPAWN - y) * BLOCK_SIZE;
-
-      return (
-        <BoardMino
-          key={`${blockX}-${blockY}`}
-          x={blockX}
-          y={blockY}
-          piece={piece}
-        />
-      );
-    })
-  );
-};
+import { BoardPiece } from "./board-piece";
+import { BoardQueue } from "./board-queue";
 
 const BoardCanvas = ({ gameState }: { gameState: GameState }) => {
   const canvasWidth = BLOCK_SIZE * BOARD_WIDTH;
@@ -71,17 +33,7 @@ const BoardCanvas = ({ gameState }: { gameState: GameState }) => {
 
       <BoardPiece pieceData={gameState.current} />
 
-      {gameState.queue.map((piece, index) => (
-        <BoardPiece
-          key={`${piece}${index}`}
-          pieceData={{
-            x: BOARD_WIDTH,
-            y: PIECE_SPAWN - index * 3,
-            piece,
-            rotation: 0,
-          }}
-        />
-      ))}
+      <BoardQueue queue={gameState.queue} />
     </Stage>
   );
 };
