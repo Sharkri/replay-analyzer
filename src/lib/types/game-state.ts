@@ -9,6 +9,9 @@ export type GameState = {
   queue: Piece[];
   board: Board;
   current: PieceData;
+  dead: boolean;
+  held?: Piece;
+  canHold: boolean;
 };
 
 export type PieceData = {
