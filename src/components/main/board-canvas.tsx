@@ -1,19 +1,13 @@
+import { PIECE_SPAWN } from "@/lib/engine/game";
 import { Piece, PIECE_COLORS, PIECE_MATRICES } from "@/lib/engine/piece";
+import { GameState, PieceData } from "@/lib/types/game-state";
 import { Stage, Graphics } from "@pixi/react";
 
-const BLOCK_SIZE = 40; // Size of a single block
-const BOARD_WIDTH = 10; // Number of blocks horizontally
-const BOARD_HEIGHT = 20; // Number of blocks vertically
+const BLOCK_SIZE = 40;
+const BOARD_WIDTH = 10;
+const BOARD_HEIGHT = 20;
 
-const BoardBlock = ({
-  x,
-  y,
-  piece,
-}: {
-  x: number;
-  y: number;
-  piece: Piece;
-}) => {
+const BoardMino = ({ x, y, piece }: { x: number; y: number; piece: Piece }) => {
   return (
     <Graphics
       draw={(g) => {
@@ -28,9 +22,35 @@ const BoardBlock = ({
   );
 };
 
-const BoardCanvas = ({ queue }: { queue: Piece[] }) => {
+const BoardPiece = ({ pieceData }: { pieceData: PieceData }) => {
+  const { piece, rotation, x, y } = pieceData;
+
+  const shape = PIECE_MATRICES[piece][rotation];
+
+  return shape.map((row, pieceY) =>
+    row.map((cell, pieceX) => {
+      if (cell === 0) return null;
+
+      let blockX = pieceX * BLOCK_SIZE + x * BLOCK_SIZE;
+      let blockY = pieceY * BLOCK_SIZE + (PIECE_SPAWN - y) * BLOCK_SIZE;
+
+      return (
+        <BoardMino
+          key={`${blockX}-${blockY}`}
+          x={blockX}
+          y={blockY}
+          piece={piece}
+        />
+      );
+    })
+  );
+};
+
+const BoardCanvas = ({ gameState }: { gameState: GameState }) => {
   const canvasWidth = BLOCK_SIZE * BOARD_WIDTH;
   const canvasHeight = BLOCK_SIZE * BOARD_HEIGHT;
+
+  console.log(gameState.current);
 
   return (
     <Stage width={canvasWidth + 160} height={canvasHeight}>
@@ -49,29 +69,19 @@ const BoardCanvas = ({ queue }: { queue: Piece[] }) => {
         }}
       />
 
-      {queue.map((piece, index) => {
-        const shape = PIECE_MATRICES[piece];
+      <BoardPiece pieceData={gameState.current} />
 
-        return shape.map((row, pieceY) => {
-          return row.map((cell, pieceX) => {
-            if (cell === 0) {
-              return null;
-            }
-
-            let blockX = canvasWidth + pieceX * BLOCK_SIZE;
-            let blockY = pieceY * BLOCK_SIZE + index * 120;
-
-            return (
-              <BoardBlock
-                key={crypto.randomUUID()}
-                x={blockX}
-                y={blockY}
-                piece={piece}
-              />
-            );
-          });
-        });
-      })}
+      {gameState.queue.map((piece, index) => (
+        <BoardPiece
+          key={`${piece}${index}`}
+          pieceData={{
+            x: BOARD_WIDTH,
+            y: PIECE_SPAWN - index * 3,
+            piece,
+            rotation: 0,
+          }}
+        />
+      ))}
     </Stage>
   );
 };
