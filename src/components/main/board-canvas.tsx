@@ -31,16 +31,14 @@ const BoardCanvas = ({ gameState }: { gameState: GameState }) => {
 
       {gameState.board.map((row, y) => {
         const rowMinos = [];
-
         for (let x = 0; x < BOARD_WIDTH; x++) {
           if ((row & (1 << x)) !== 0) {
-            const blockX = x * BLOCK_SIZE;
-            const blockY = (BOARD_HEIGHT - y - 1) * BLOCK_SIZE;
-
-            rowMinos.push(<BoardMino x={blockX} y={blockY} block="G" />);
+            const boardY = BOARD_HEIGHT - y - 1;
+            rowMinos.push(
+              <BoardMino x={x} y={boardY} block="G" key={`${x}${boardY}`} />
+            );
           }
         }
-
         return rowMinos;
       })}
 

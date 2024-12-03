@@ -21,8 +21,8 @@ export const BoardMino = ({
         g.drawRect(0, 0, BLOCK_SIZE - 1, BLOCK_SIZE);
         g.endFill();
       }}
-      x={x}
-      y={y}
+      x={x * BLOCK_SIZE}
+      y={y * BLOCK_SIZE}
     />
   );
 };
@@ -36,12 +36,12 @@ export const BoardPiece = ({ pieceData }: { pieceData: PieceData }) => {
     row.map((cell, pieceX) => {
       if (cell === 0) return null;
 
-      let blockX = pieceX * BLOCK_SIZE + x * BLOCK_SIZE;
-      let blockY = pieceY * BLOCK_SIZE + (PIECE_SPAWN - y) * BLOCK_SIZE;
+      let blockX = pieceX + x;
+      let blockY = pieceY + (PIECE_SPAWN - y);
 
       return (
         <BoardMino
-          key={`${blockX}-${blockY}`}
+          key={`${blockX}${blockY}`}
           x={blockX}
           y={blockY}
           block={piece}
