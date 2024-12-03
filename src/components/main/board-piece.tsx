@@ -1,5 +1,5 @@
 import { PIECE_SPAWN } from "@/lib/engine/game";
-import { Piece, PIECE_COLORS, PIECE_MATRICES } from "@/lib/engine/piece";
+import { Block, BLOCK_COLORS, PIECE_MATRICES } from "@/lib/engine/piece";
 import { BLOCK_SIZE } from "@/lib/types/game-options";
 import { PieceData } from "@/lib/types/game-state";
 import { Graphics } from "@pixi/react";
@@ -7,17 +7,17 @@ import { Graphics } from "@pixi/react";
 export const BoardMino = ({
   x,
   y,
-  piece,
+  block,
 }: {
   x: number;
   y: number;
-  piece: Piece;
+  block: Block;
 }) => {
   return (
     <Graphics
       draw={(g) => {
         g.clear();
-        g.beginFill(PIECE_COLORS[piece]);
+        g.beginFill(BLOCK_COLORS[block]);
         g.drawRect(0, 0, BLOCK_SIZE - 1, BLOCK_SIZE);
         g.endFill();
       }}
@@ -44,7 +44,7 @@ export const BoardPiece = ({ pieceData }: { pieceData: PieceData }) => {
           key={`${blockX}-${blockY}`}
           x={blockX}
           y={blockY}
-          piece={piece}
+          block={piece}
         />
       );
     })

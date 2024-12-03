@@ -10,7 +10,7 @@ import { Button } from "./components/ui/button";
 function App() {
   const [ttrm, setTTRM] = useState<null | TTRM>(null);
   const [gameState, setGameState] = useState<null | GameState>(null);
-
+  console.log(gameState);
   return (
     <div className="flex justify-center p-12">
       <div>
@@ -41,6 +41,16 @@ function App() {
           }}
         >
           roate cw
+        </Button>
+        <Button
+          onClick={() => {
+            if (gameState) {
+              const xd = executeCommand("hard_drop", gameState);
+              setGameState(xd);
+            }
+          }}
+        >
+          hd
         </Button>
 
         {gameState && <BoardCanvas gameState={gameState} />}

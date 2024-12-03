@@ -1,6 +1,7 @@
 export type Piece = "I" | "L" | "J" | "S" | "Z" | "O" | "T";
+export type Block = Piece | "G";
 
-export const PIECE_COLORS: Record<Piece, string> = {
+export const BLOCK_COLORS: Record<Block, string> = {
   I: "#00ffff",
   O: "#ffff00",
   J: "#0f1ed4",
@@ -8,6 +9,7 @@ export const PIECE_COLORS: Record<Piece, string> = {
   S: "#00ff00",
   Z: "#ff0000",
   T: "#800080",
+  G: "#7f7f7f",
 };
 
 export const WALLKICKS: { [key: string]: [number, number][] } = {

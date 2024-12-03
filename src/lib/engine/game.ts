@@ -89,7 +89,44 @@ export const createGameState = (queue: Piece[]): GameState => {
   };
 };
 
-export const hardDrop = () => {};
+const placePiece = (board: Board, pieceData: PieceData) => {
+  const pieceMatrix = getMatrix(pieceData); // Assuming `getMatrix` gives the piece's matrix.
+
+  for (let pieceY = 0; pieceY < pieceMatrix.length; pieceY++) {
+    const row = pieceMatrix[pieceY];
+    const boardY = pieceData.y - pieceY;
+    if (boardY < 0) continue;
+
+    for (let pieceX = 0; pieceX < row.length; pieceX++) {
+      const cell = row[pieceX];
+      if (!cell) continue;
+
+      // Expand board if needed
+      while (boardY >= board.length) board.push(0);
+
+      const boardX = pieceData.x + pieceX;
+      board[boardY] |= 1 << boardX;
+    }
+  }
+
+  return board;
+};
+
+export const hardDrop = (state: GameState) => {
+  sonicDrop(state);
+  // TODO: immobile checks and garbage + a bunch of others
+  placePiece(state.board, state.current);
+
+  const nextPiece = state.queue.shift();
+  if (!nextPiece) throw new Error("Queue is empty");
+
+  const { collides, piece_data } = spawnPiece(state.board, nextPiece);
+  state.dead = collides;
+  state.current = piece_data;
+
+  state.canHold = true;
+};
+
 export const moveLeft = (state: GameState) => {
   if (state.dead) throw new Error("Cannot act when dead");
   state.current.x -= 1;
@@ -133,6 +170,15 @@ export const softDrop = (state: GameState) => {
   state.current.y += 1;
 };
 
+export const sonicDrop = (state: GameState) => {
+  if (state.dead) throw new Error("Cannot act when dead");
+
+  while (!checkCollision(state.board, state.current)) {
+    state.current.y -= 1;
+  }
+  state.current.y += 1;
+};
+
 export const hold = (state: GameState) => {
   if (state.dead) throw new Error("Cannot act when dead");
   if (!state.canHold) return;
@@ -150,12 +196,12 @@ export const hold = (state: GameState) => {
   state.canHold = false;
 };
 
-export const executeCommand = (command: GameCommand, gameState: GameState) => {
-  const newGameState = structuredClone(gameState);
+export const executeCommand = (command: GameCommand, state: GameState) => {
+  const newGameState = structuredClone(state);
 
   switch (command) {
     case "hard_drop":
-      hardDrop();
+      hardDrop(newGameState);
       break;
     case "move_left":
       moveLeft(newGameState);

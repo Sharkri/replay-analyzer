@@ -5,14 +5,12 @@ import {
 } from "@/lib/types/game-options";
 import { GameState } from "@/lib/types/game-state";
 import { Stage, Graphics } from "@pixi/react";
-import { BoardPiece } from "./board-piece";
+import { BoardMino, BoardPiece } from "./board-piece";
 import { BoardQueue } from "./board-queue";
 
 const BoardCanvas = ({ gameState }: { gameState: GameState }) => {
   const canvasWidth = BLOCK_SIZE * BOARD_WIDTH;
   const canvasHeight = BLOCK_SIZE * BOARD_HEIGHT;
-
-  console.log(gameState.current);
 
   return (
     <Stage width={canvasWidth + 160} height={canvasHeight}>
@@ -30,6 +28,21 @@ const BoardCanvas = ({ gameState }: { gameState: GameState }) => {
           }
         }}
       />
+
+      {gameState.board.map((row, y) => {
+        const rowMinos = [];
+
+        for (let x = 0; x < BOARD_WIDTH; x++) {
+          if ((row & (1 << x)) !== 0) {
+            const blockX = x * BLOCK_SIZE;
+            const blockY = (BOARD_HEIGHT - y - 1) * BLOCK_SIZE;
+
+            rowMinos.push(<BoardMino x={blockX} y={blockY} block="G" />);
+          }
+        }
+
+        return rowMinos;
+      })}
 
       <BoardPiece pieceData={gameState.current} />
 
