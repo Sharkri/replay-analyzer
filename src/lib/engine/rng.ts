@@ -1,3 +1,4 @@
+import { PIECE_BAG } from "../types/game-state";
 import { Piece } from "./piece";
 
 const RNG_SEED = 2147483647;
@@ -13,7 +14,7 @@ export class GameRNG {
   }
 
   next() {
-    this.seed = (16807 * this.seed) % (RNG_SEED - 1);
+    this.seed = (16807 * this.seed) % RNG_SEED;
     return this.seed;
   }
 
@@ -29,5 +30,15 @@ export class GameRNG {
     }
 
     return arr;
+  }
+
+  getNextBag(bags = 1) {
+    const queue = [];
+
+    for (let i = 0; i < bags; i++) {
+      queue.push(...this.shuffleArray([...PIECE_BAG]));
+    }
+
+    return queue as Piece[];
   }
 }

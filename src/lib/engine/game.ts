@@ -1,18 +1,11 @@
 import { BOARD_WIDTH } from "../types/game-options";
 import { Board, GameState, PieceData, Rotation } from "../types/game-state";
+import { GameCommand } from "../types/ttrm";
 import { I_KICKS, Piece, PIECE_MATRICES, WALLKICKS } from "./piece";
 
 export const PIECE_SPAWN = 21;
-export type GameCommand =
-  | "hard_drop"
-  | "move_left"
-  | "move_right"
-  | "soft_drop"
-  | "rotate_cw"
-  | "rotate_ccw"
-  | "hold";
 
-const getMatrix = ({ piece, rotation }: PieceData) =>
+export const getMatrix = ({ piece, rotation }: PieceData) =>
   PIECE_MATRICES[piece][rotation & 0x03];
 
 const checkCollision = (board: Board, pieceData: PieceData) => {
@@ -80,7 +73,7 @@ export const createGameState = (queue: Piece[]): GameState => {
   const current = spawnPiece(board, gameQueue.shift() || "I");
 
   return {
-    queue,
+    queue: gameQueue,
     current: current.piece_data,
     board,
     dead: false,
@@ -88,7 +81,7 @@ export const createGameState = (queue: Piece[]): GameState => {
   };
 };
 
-const placePiece = (board: Board, pieceData: PieceData) => {
+export const placePiece = (board: Board, pieceData: PieceData) => {
   const pieceMatrix = getMatrix(pieceData); // Assuming `getMatrix` gives the piece's matrix.
 
   for (let pieceY = 0; pieceY < pieceMatrix.length; pieceY++) {
@@ -133,7 +126,10 @@ export const moveLeft = (state: GameState) => {
 
   if (checkCollision(state.board, state.current)) {
     state.current.x += 1;
+    return false;
   }
+
+  return true;
 };
 export const moveRight = (state: GameState) => {
   if (state.dead) throw new Error("Cannot act when dead");
@@ -141,7 +137,10 @@ export const moveRight = (state: GameState) => {
 
   if (checkCollision(state.board, state.current)) {
     state.current.x -= 1;
+    return false;
   }
+
+  return true;
 };
 export const rotateCW = (state: GameState) => {
   if (state.dead) throw new Error("Cannot act when dead");
@@ -196,29 +195,43 @@ export const hold = (state: GameState) => {
   state.canHold = false;
 };
 
-export const executeCommand = (command: GameCommand, state: GameState) => {
+export const executeCommand = (
+  command: GameCommand | "dasLeft" | "dasRight",
+  state: GameState
+) => {
   const newGameState = structuredClone(state);
 
   switch (command) {
-    case "hard_drop":
+    case "hardDrop":
       hardDrop(newGameState);
       break;
-    case "move_left":
+    case "moveLeft":
       moveLeft(newGameState);
       break;
-    case "move_right":
+    case "moveRight":
       moveRight(newGameState);
       break;
-    case "rotate_cw":
+    case "rotateCW":
       rotateCW(newGameState);
       break;
-    case "rotate_ccw":
+    case "rotateCCW":
       rotateCCW(newGameState);
       break;
-    case "soft_drop":
+    case "softDrop":
+      // TODO: soft drop should not always be max
+      softDrop(newGameState);
       break;
     case "hold":
       hold(newGameState);
+      break;
+    case "rotate180":
+      console.log("180 not implemented yet...");
+      break;
+    case "dasLeft":
+      while (moveLeft(newGameState)) {}
+      break;
+    case "dasRight":
+      while (moveRight(newGameState)) {}
       break;
 
     default:

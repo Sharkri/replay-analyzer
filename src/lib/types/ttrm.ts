@@ -1,5 +1,50 @@
 import { z } from "zod";
 
+// TODO: add types for z.any()
+const keyEnum = z.enum([
+  "hardDrop",
+  "moveLeft",
+  "moveRight",
+  "rotateCW",
+  "rotateCCW",
+  "rotate180",
+  "softDrop",
+  "hold",
+]);
+
+const keyDataSchema = z.object({
+  key: keyEnum,
+  subframe: z.number(),
+});
+
+const eventSchema = z.discriminatedUnion("type", [
+  z.object({
+    frame: z.number(),
+    type: z.literal("start"),
+    data: z.object({}),
+  }),
+  z.object({
+    frame: z.number(),
+    type: z.enum(["keydown", "keyup"]),
+    data: keyDataSchema,
+  }),
+  z.object({
+    frame: z.number(),
+    type: z.literal("ige"),
+    data: z.object({
+      id: z.number(),
+      type: z.string(),
+      frame: z.number(),
+      data: z.any(),
+    }),
+  }),
+  z.object({
+    frame: z.number(),
+    type: z.literal("end"),
+    data: z.object({}),
+  }),
+]);
+
 export const statsSchema = z.object({
   apm: z.number(),
   btb: z.number(),
@@ -11,18 +56,31 @@ export const statsSchema = z.object({
   vsscore: z.number(),
 });
 
-export const framesSchema = z.object({});
+export const optionsSchema = z.object({
+  handling: z.object({
+    arr: z.number(),
+    das: z.number(),
+    dcd: z.number(),
+    sdf: z.number(),
+    safelock: z.boolean(),
+    cancel: z.boolean(),
+    may20g: z.boolean(),
+  }),
+  seed: z.number(),
+});
 
-export const replayEventsSchema = z.object({
-  events: z.any(),
+export const roundReplaySchema = z.object({
+  events: z.array(eventSchema),
   frames: z.number(),
+  options: optionsSchema,
+  results: z.any(),
 });
 
 export const roundSchema = z.object({
   username: z.string(),
   stats: statsSchema,
   id: z.string(),
-  replay: z.any(),
+  replay: roundReplaySchema,
 });
 
 export const replaySchema = z.object({
@@ -34,4 +92,8 @@ export const TTRMSchema = z.object({
   replay: replaySchema,
 });
 
+export type Replay = z.infer<typeof replaySchema>;
+export type ReplayEvent = z.infer<typeof eventSchema>;
+export type Round = z.infer<typeof roundSchema>;
 export type TTRM = z.infer<typeof TTRMSchema>;
+export type GameCommand = z.infer<typeof keyEnum>;

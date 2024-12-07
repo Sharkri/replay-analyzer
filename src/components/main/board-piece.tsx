@@ -1,6 +1,6 @@
-import { PIECE_SPAWN } from "@/lib/engine/game";
-import { Block, BLOCK_COLORS, PIECE_MATRICES } from "@/lib/engine/piece";
-import { BLOCK_SIZE, X_OFFSET } from "@/lib/types/game-options";
+import { getMatrix, PIECE_SPAWN } from "@/lib/engine/game";
+import { Block, BLOCK_COLORS } from "@/lib/engine/piece";
+import { BLOCK_SIZE, X_OFFSET, Y_OFFSET } from "@/lib/types/game-options";
 import { PieceData } from "@/lib/types/game-state";
 import { Graphics } from "@pixi/react";
 
@@ -22,15 +22,15 @@ export const BoardMino = ({
         g.endFill();
       }}
       x={x * BLOCK_SIZE + X_OFFSET}
-      y={y * BLOCK_SIZE}
+      y={y * BLOCK_SIZE + Y_OFFSET}
     />
   );
 };
 
 export const BoardPiece = ({ pieceData }: { pieceData: PieceData }) => {
-  const { piece, rotation, x, y } = pieceData;
+  const { piece, x, y } = pieceData;
 
-  const shape = PIECE_MATRICES[piece][rotation];
+  const shape = getMatrix(pieceData);
 
   return shape.map((row, pieceY) =>
     row.map((cell, pieceX) => {
