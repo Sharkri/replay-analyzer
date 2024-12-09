@@ -17,17 +17,19 @@ const keyDataSchema = z.object({
   subframe: z.number(),
 });
 
+const keyEvent = z.object({
+  frame: z.number(),
+  type: z.enum(["keydown", "keyup"]),
+  data: keyDataSchema,
+});
+
 const eventSchema = z.discriminatedUnion("type", [
   z.object({
     frame: z.number(),
     type: z.literal("start"),
     data: z.object({}),
   }),
-  z.object({
-    frame: z.number(),
-    type: z.enum(["keydown", "keyup"]),
-    data: keyDataSchema,
-  }),
+  keyEvent,
   z.object({
     frame: z.number(),
     type: z.literal("ige"),
@@ -97,3 +99,4 @@ export type ReplayEvent = z.infer<typeof eventSchema>;
 export type Round = z.infer<typeof roundSchema>;
 export type TTRM = z.infer<typeof TTRMSchema>;
 export type GameCommand = z.infer<typeof keyEnum>;
+export type KeyEvent = z.infer<typeof keyEvent>;

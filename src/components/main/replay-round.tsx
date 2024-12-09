@@ -1,11 +1,18 @@
-import { GameCommand, ReplayEvent, Round } from "@/lib/types/ttrm";
+import { KeyEvent, ReplayEvent, Round } from "@/lib/types/ttrm";
 import { Button } from "../ui/button";
 import { useState } from "react";
-import { createGameState, executeCommand } from "@/lib/engine/game";
+import {
+  Command,
+  createGameState,
+  executeCommand,
+  executeCommands,
+} from "@/lib/engine/game";
 import { GameRNG } from "@/lib/engine/rng";
 import BoardCanvas from "./board-canvas";
+import { GameState } from "@/lib/types/game-state";
 
-type Haha = { frame: number; order: number };
+type HeldKey = { frame: number; order: number };
+type HeldKeys = Record<string, HeldKey>;
 
 export const ReplayRound = ({ round }: { round: Round }) => {
   const { replay } = round;
@@ -16,29 +23,29 @@ export const ReplayRound = ({ round }: { round: Round }) => {
   const [gameState, setGameState] = useState(
     createGameState(rng.getNextBag(10))
   );
-  // null or number (the frame at which the key was pressed)
-  const [heldKeys, setHeldKeys] = useState<Record<string, null | Haha>>({
-    moveLeft: null,
-    moveRight: null,
-    softDrop: null,
-  });
+  const [heldKeys, setHeldKeys] = useState<HeldKeys>({});
 
-  const processEvent = (event: ReplayEvent) => {
+  const processEvent = (
+    event: ReplayEvent,
+    gameState: GameState,
+    heldKeys: HeldKeys
+  ) => {
+    let newState = gameState;
+    let newHeldKeys = structuredClone(heldKeys);
+
     switch (event.type) {
       case "start":
         console.log(`Game started at frame ${event.frame}`);
         break;
 
       case "keydown":
-        handleFrame(event.frame, event.data.subframe);
-        handleKeyDown(event.data.key, event.frame, event.data.subframe);
-
+        newState = executeCommands(getFrameCommands(event, heldKeys), newState);
+        newState = handleKeyDown(event, newState, newHeldKeys);
         break;
 
       case "keyup":
-        handleKeyUp(event.data.key, event.frame, event.data.subframe);
-        handleFrame(event.frame, event.data.subframe);
-
+        handleKeyUp(event, newHeldKeys);
+        newState = executeCommands(getFrameCommands(event, heldKeys), newState);
         break;
 
       case "ige":
@@ -52,31 +59,39 @@ export const ReplayRound = ({ round }: { round: Round }) => {
       default:
         console.error(`Unknown event type: ${event}`);
     }
+
+    return { newState, newHeldKeys };
   };
 
-  const handleKeyDown = (key: GameCommand, frame: number, subframe: number) => {
-    console.log(`Key pressed: ${key} at frame ${frame}`);
+  const handleKeyDown = (
+    event: KeyEvent,
+    gameState: GameState,
+    heldKeys: HeldKeys
+  ) => {
+    const { data, frame } = event;
 
-    const currFrame = frame + subframe;
+    console.log(`Key pressed: ${data.key} at frame ${frame}`);
+    const currFrame = frame + data.subframe;
 
-    setHeldKeys((prev) => {
-      Object.keys(prev).forEach((k) => {
-        if (key === "moveLeft" && prev.moveRight !== null) {
-          prev.moveRight = { frame: currFrame, order: 0 };
-        } else if (key === "moveRight" && prev.moveLeft !== null) {
-          prev.moveLeft = { frame: currFrame, order: 0 };
-        }
+    Object.keys(heldKeys).forEach((k) => {
+      if (data.key === "moveLeft" && heldKeys.moveRight) {
+        heldKeys.moveRight = { frame: currFrame, order: 0 };
+      } else if (data.key === "moveRight" && heldKeys.moveLeft) {
+        heldKeys.moveLeft = { frame: currFrame, order: 0 };
+      }
 
-        if (prev[k]) prev[k].order += 1;
-      });
-      return { ...prev, [key]: { frame: currFrame, order: 0 } };
+      heldKeys[k].order += 1;
     });
-    setGameState((prevGameState) => executeCommand(key, prevGameState));
+    heldKeys[data.key] = { frame: currFrame, order: 0 };
+
+    return executeCommand(data.key, gameState);
   };
 
-  const handleKeyUp = (key: string, frame: number, subframe: number) => {
-    console.log("released key:", key, "frame", frame + subframe);
-    setHeldKeys((prev) => ({ ...prev, [key]: null }));
+  const handleKeyUp = (event: KeyEvent, heldKeys: HeldKeys) => {
+    const { frame, data } = event;
+
+    console.log("released key:", data.key, "frame", frame + data.subframe);
+    delete heldKeys[data.key];
   };
 
   const handleIGEEvent = (data: unknown) => {
@@ -84,18 +99,18 @@ export const ReplayRound = ({ round }: { round: Round }) => {
     // Add logic to handle IGE events based on their structure
   };
 
-  const handleFrame = (frame: number, subframe: number) => {
+  const getFrameCommands = (event: KeyEvent, heldKeys: HeldKeys) => {
     const { das, arr } = replay.options.handling;
-
-    const currentFrame = frame + subframe;
+    const currentFrame = event.frame + event.data.subframe;
+    const commands: Command[] = [];
 
     console.log(heldKeys);
 
-    const keys = Object.entries(heldKeys).filter(([, v]) => v);
-    keys.sort(([, a], [, b]) => b!.order - a!.order);
-    // Handle DAS and ARR for left and right
+    const keys = Object.entries(heldKeys);
+    keys.sort(([, a], [, b]) => b.order - a.order);
+
     keys.forEach(([key, pressTime]) => {
-      if (pressTime !== null && (key == "moveLeft" || key == "moveRight")) {
+      if (key == "moveLeft" || key == "moveRight") {
         const framesHeld = currentFrame - pressTime.frame;
         if (framesHeld >= das) {
           // DAS threshold reached, trigger ARR
@@ -103,23 +118,55 @@ export const ReplayRound = ({ round }: { round: Round }) => {
 
           // Trigger movement at every ARR interval
           if (arr === 0 || arrFrames % arr === 0) {
-            const command = key === "moveLeft" ? "dasLeft" : "dasRight";
-            setGameState((prev) => executeCommand(command, prev));
+            commands.push(key === "moveLeft" ? "dasLeft" : "dasRight");
           }
         }
+      } else if (key == "softDrop") {
+        commands.push(key);
       }
     });
+
+    return commands;
   };
 
   return (
     <div>
       <Button
         onClick={() => {
-          processEvent(replay.events[event]);
+          const { newState, newHeldKeys } = processEvent(
+            replay.events[event],
+            gameState,
+            heldKeys
+          );
+          setHeldKeys(newHeldKeys);
+          setGameState(newState); // Set state after processing
           setEvent((prev) => prev + 1);
         }}
       >
         Next Event
+      </Button>
+
+      <Button
+        onClick={() => {
+          let newGameState = gameState;
+          let newHeldKeys = heldKeys;
+          let currEvent = 0;
+
+          for (; currEvent < 5; currEvent++) {
+            let a = processEvent(
+              replay.events[event + currEvent],
+              newGameState,
+              newHeldKeys
+            );
+            newGameState = a.newState;
+            newHeldKeys = a.newHeldKeys;
+          }
+          setEvent((prev) => prev + currEvent);
+          setGameState(newGameState); // Set state after batch processing
+          setHeldKeys(newHeldKeys);
+        }}
+      >
+        Next Piece
       </Button>
 
       {round.username}

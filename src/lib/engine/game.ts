@@ -3,6 +3,8 @@ import { Board, GameState, PieceData, Rotation } from "../types/game-state";
 import { GameCommand } from "../types/ttrm";
 import { I_KICKS, Piece, PIECE_MATRICES, WALLKICKS } from "./piece";
 
+export type Command = GameCommand | "dasLeft" | "dasRight";
+
 export const PIECE_SPAWN = 21;
 
 export const getMatrix = ({ piece, rotation }: PieceData) =>
@@ -30,6 +32,18 @@ const checkCollision = (board: Board, pieceData: PieceData) => {
   }
 
   return false;
+};
+
+const clearLines = (board: Board) => {
+  let cleared_lines = 0;
+
+  for (let i = board.length - 1; i >= 0; i--) {
+    const isFullRow = board[i].every((cell) => cell !== null);
+    if (isFullRow) {
+      cleared_lines += 1;
+      board.splice(i, 1);
+    }
+  }
 };
 
 function tryWallKicks(board: Board, pieceData: PieceData, rotation: Rotation) {
@@ -109,6 +123,7 @@ export const hardDrop = (state: GameState) => {
   sonicDrop(state);
   // TODO: immobile checks and garbage + a bunch of others
   placePiece(state.board, state.current);
+  clearLines(state.board);
 
   const nextPiece = state.queue.shift();
   if (!nextPiece) throw new Error("Queue is empty");
@@ -195,10 +210,7 @@ export const hold = (state: GameState) => {
   state.canHold = false;
 };
 
-export const executeCommand = (
-  command: GameCommand | "dasLeft" | "dasRight",
-  state: GameState
-) => {
+export const executeCommand = (command: Command, state: GameState) => {
   const newGameState = structuredClone(state);
 
   switch (command) {
@@ -240,4 +252,14 @@ export const executeCommand = (
   }
 
   return newGameState;
+};
+
+export const executeCommands = (commands: Command[], state: GameState) => {
+  let newState = state;
+  // probably not the most efficient to use structuredClone a bunch of times but its probably fine
+  for (const command of commands) {
+    newState = executeCommand(command, newState);
+  }
+
+  return newState;
 };
