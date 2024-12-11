@@ -23,6 +23,60 @@ const keyEvent = z.object({
   data: keyDataSchema,
 });
 
+const igeDataSchema = z.discriminatedUnion("type", [
+  z.object({
+    frame: z.number(),
+    type: z.literal("interaction"),
+    data: z.object({
+      gameid: z.number(),
+      frame: z.number(),
+      cid: z.number(),
+      iid: z.number(),
+      ackiid: z.number(),
+      size: z.number(),
+      type: z.literal("garbage"),
+      x: z.number(),
+      y: z.number(),
+      amt: z.number(),
+    }),
+  }),
+  z.object({
+    frame: z.number(),
+    type: z.literal("interaction_confirm"),
+    data: z.object({
+      gameid: z.number(),
+      frame: z.number(),
+      cid: z.number(),
+      iid: z.number(),
+      ackiid: z.number(),
+      size: z.number(),
+      type: z.literal("garbage"),
+      x: z.number(),
+      y: z.number(),
+      amt: z.number(),
+    }),
+  }),
+  z.object({
+    frame: z.number(),
+    type: z.literal("target"),
+    data: z.object({ targets: z.array(z.number()) }),
+  }),
+  z.object({
+    frame: z.number(),
+    type: z.literal("allow_targeting"),
+    data: z.object({ value: z.boolean() }),
+  }),
+  z.object({ frame: z.number(), type: z.literal("targeted"), data: z.any() }),
+  z.object({ frame: z.number(), type: z.literal("kev"), data: z.any() }),
+  z.object({ frame: z.number(), type: z.literal("custom"), data: z.any() }), // TODO: any type lol
+]);
+
+const igeEvent = z.object({
+  frame: z.number(),
+  type: z.literal("ige"),
+  data: igeDataSchema,
+});
+
 const eventSchema = z.discriminatedUnion("type", [
   z.object({
     frame: z.number(),
@@ -30,16 +84,7 @@ const eventSchema = z.discriminatedUnion("type", [
     data: z.object({}),
   }),
   keyEvent,
-  z.object({
-    frame: z.number(),
-    type: z.literal("ige"),
-    data: z.object({
-      id: z.number(),
-      type: z.string(),
-      frame: z.number(),
-      data: z.any(),
-    }),
-  }),
+  igeEvent,
   z.object({
     frame: z.number(),
     type: z.literal("end"),
@@ -100,3 +145,4 @@ export type Round = z.infer<typeof roundSchema>;
 export type TTRM = z.infer<typeof TTRMSchema>;
 export type GameCommand = z.infer<typeof keyEnum>;
 export type KeyEvent = z.infer<typeof keyEvent>;
+export type IGEEvent = z.infer<typeof igeEvent>;

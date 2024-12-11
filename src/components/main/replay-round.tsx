@@ -17,7 +17,10 @@ export const ReplayRound = ({ round }: { round: Round }) => {
   const { events, options } = replay;
   const { handling, seed } = options;
 
+  console.log(seed);
+
   const rng = new GameRNG(seed);
+  const rngex = new GameRNG(seed);
 
   const [eventIndex, setEventIndex] = useState(0);
   const [gameState, setGameState] = useState(
@@ -34,6 +37,7 @@ export const ReplayRound = ({ round }: { round: Round }) => {
   const processEvent = (event: ReplayEvent, heldKeys: HeldKeys) => {
     let newHeldKeys = structuredClone(heldKeys);
     const commands: Command[] = [];
+    let garbage = null;
 
     switch (event.type) {
       case "start":
@@ -52,7 +56,7 @@ export const ReplayRound = ({ round }: { round: Round }) => {
         break;
 
       case "ige":
-        handleIGEEvent(event.data);
+        garbage = handleIGEEvent(event, rngex);
         break;
 
       case "end":
@@ -63,13 +67,19 @@ export const ReplayRound = ({ round }: { round: Round }) => {
         console.error(`Unknown event type: ${event}`);
     }
 
-    return { commands, newHeldKeys };
+    return { commands, newHeldKeys, garbage };
   };
 
   const handleNextEvent = () => {
-    const { commands, newHeldKeys } = processEvent(currEvent, heldKeys);
+    const { commands, newHeldKeys, garbage } = processEvent(
+      currEvent,
+      heldKeys
+    );
     setHeldKeys(newHeldKeys);
-    setGameState((prev) => executeCommands(commands, prev));
+    setGameState((prev) => {
+      if (garbage) prev.garbageQueued.push(garbage);
+      return executeCommands(commands, prev);
+    });
     setEventIndex((prev) => prev + 1);
   };
 
@@ -80,7 +90,10 @@ export const ReplayRound = ({ round }: { round: Round }) => {
     for (let i = 0; i < count; i++) {
       const event = events[eventIndex + i];
       let result = processEvent(event, newHeldKeys);
+      if (result.garbage) newGameState.garbageQueued.push(result.garbage);
+
       newGameState = executeCommands(result.commands, newGameState);
+
       newHeldKeys = result.newHeldKeys;
     }
 

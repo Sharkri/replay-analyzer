@@ -2,8 +2,10 @@ import { Block, Piece } from "../engine/piece";
 
 export const PIECE_BAG: Piece[] = ["Z", "L", "O", "S", "I", "J", "T"];
 
-export type Board = (Block | null)[][];
+export type BoardRow = (Block | null)[];
+export type Board = BoardRow[];
 export type Rotation = 0 | 1 | 2 | 3;
+export type GarbageQueued = { column: number; frame: number; amt: number };
 
 export type GameState = {
   queue: Piece[];
@@ -12,6 +14,7 @@ export type GameState = {
   dead: boolean;
   held?: Piece;
   canHold: boolean;
+  garbageQueued: GarbageQueued[];
 };
 
 export type PieceData = {

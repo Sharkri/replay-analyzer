@@ -1,5 +1,12 @@
 import { BOARD_WIDTH } from "../types/game-options";
-import { Board, GameState, PieceData, Rotation } from "../types/game-state";
+import {
+  Board,
+  BoardRow,
+  GameState,
+  GarbageQueued,
+  PieceData,
+  Rotation,
+} from "../types/game-state";
 import { GameCommand } from "../types/ttrm";
 import { I_KICKS, Piece, PIECE_MATRICES, WALLKICKS } from "./piece";
 
@@ -35,15 +42,17 @@ const checkCollision = (board: Board, pieceData: PieceData) => {
 };
 
 const clearLines = (board: Board) => {
-  let cleared_lines = 0;
+  let clearedLines = 0;
 
   for (let i = board.length - 1; i >= 0; i--) {
     const isFullRow = board[i].every((cell) => cell !== null);
     if (isFullRow) {
-      cleared_lines += 1;
+      clearedLines += 1;
       board.splice(i, 1);
     }
   }
+
+  return clearedLines;
 };
 
 function tryWallKicks(board: Board, pieceData: PieceData, rotation: Rotation) {
@@ -92,6 +101,7 @@ export const createGameState = (queue: Piece[]): GameState => {
     board,
     dead: false,
     canHold: true,
+    garbageQueued: [],
   };
 };
 
@@ -119,14 +129,29 @@ export const placePiece = (board: Board, pieceData: PieceData) => {
   return board;
 };
 
+export function addGarbage(board: Board, garbage: GarbageQueued) {
+  for (let i = 0; i < garbage.amt; i++) {
+    const line: BoardRow = Array.from({ length: 10 }, () => "G");
+    line[garbage.column] = null;
+    board.unshift(line);
+  }
+}
+
 export const hardDrop = (state: GameState) => {
   sonicDrop(state);
   // TODO: immobile checks and garbage + a bunch of others
   placePiece(state.board, state.current);
-  clearLines(state.board);
+  const clearedLines = clearLines(state.board);
 
   const nextPiece = state.queue.shift();
   if (!nextPiece) throw new Error("Queue is empty");
+
+  if (clearedLines == 0) {
+    while (state.garbageQueued.length > 0) {
+      const garbage = state.garbageQueued.shift();
+      if (garbage != null) addGarbage(state.board, garbage);
+    }
+  }
 
   const { collides, piece_data } = spawnPiece(state.board, nextPiece);
   state.dead = collides;

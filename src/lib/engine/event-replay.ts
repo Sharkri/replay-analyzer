@@ -1,5 +1,6 @@
-import { KeyEvent } from "@/lib/types/ttrm";
+import { IGEEvent, KeyEvent } from "@/lib/types/ttrm";
 import { Command } from "@/lib/engine/game";
+import { GameRNG } from "./rng";
 
 export type HeldKey = { frame: number; order: number } | null;
 export type HeldKeys = Record<"moveLeft" | "moveRight" | "softDrop", HeldKey>;
@@ -43,6 +44,8 @@ export const getHeldKeyCommands = (
   const currentFrame = event.frame + event.data.subframe;
   const commands: Command[] = [];
 
+  console.log(heldKeys);
+
   // order doesnt seem to do anything but idk
   const keys = Object.entries(heldKeys).sort(([, a], [, b]) =>
     a && b ? b.order - a.order : 0
@@ -66,7 +69,37 @@ export const getHeldKeyCommands = (
   return commands;
 };
 
-export const handleIGEEvent = (data: unknown) => {
-  console.log(`Processing IGE event:`, data);
+export const handleIGEEvent = (event: IGEEvent, rng: GameRNG) => {
+  console.log(`Processing IGE event:`, event);
   // Add logic to handle IGE events based on their structure
+
+  const { data } = event;
+  switch (data.type) {
+    case "custom":
+      break;
+    case "interaction":
+      break;
+    case "interaction_confirm":
+      if (data.data.type === "garbage") {
+        const { amt, frame } = data.data;
+        const column = Math.floor(rng.nextFloat() * 10);
+
+        return { amt, column, frame };
+      }
+      break;
+
+    case "allow_targeting":
+      break;
+    case "target":
+      break;
+    case "targeted":
+      break;
+    case "kev":
+      break;
+
+    default:
+      console.log("Unknown event:", event);
+  }
+
+  return null;
 };
