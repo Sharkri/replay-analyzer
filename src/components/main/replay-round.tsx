@@ -26,9 +26,6 @@ export const ReplayRound = ({ round }: { round: Round }) => {
   const [gameState, setGameState] = useState(
     createGameState(rng.getNextBag(10))
   );
-  // events.filter((ev) => {
-  //   ev.type==='ige' && ev.data.type===''
-  // })
 
   const [heldKeys, setHeldKeys] = useState<HeldKeys>({
     moveLeft: null,

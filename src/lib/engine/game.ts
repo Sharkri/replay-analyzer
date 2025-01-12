@@ -173,7 +173,7 @@ export const calculateAttack = (
   }
 
   let attack = 0;
-  let isB2B = b2b;
+  let isB2B = false;
   let newCombo = combo + 1;
 
   if (immobile && current.piece === "T") {
@@ -203,6 +203,10 @@ export const calculateAttack = (
       default:
         break;
     }
+  }
+
+  if (isB2B) {
+    attack += 1;
   }
 
   return { b2b: isB2B, attack, combo: newCombo };
