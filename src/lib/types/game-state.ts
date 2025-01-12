@@ -6,6 +6,7 @@ export type BoardRow = (Block | null)[];
 export type Board = BoardRow[];
 export type Rotation = 0 | 1 | 2 | 3;
 export type GarbageQueued = { column: number; frame: number; amt: number };
+export type AttackQueued = { amt: number; frame: number };
 
 export type GameState = {
   queue: Piece[];
@@ -15,6 +16,9 @@ export type GameState = {
   held?: Piece;
   canHold: boolean;
   garbageQueued: GarbageQueued[];
+  combo: number;
+  b2b: boolean;
+  attackQueued: AttackQueued[];
 };
 
 export type PieceData = {

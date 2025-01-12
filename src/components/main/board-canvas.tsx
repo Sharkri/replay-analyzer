@@ -4,7 +4,7 @@ import {
   BOARD_WIDTH,
   X_OFFSET,
   Y_OFFSET,
-} from "@/lib/types/game-options";
+} from "@/lib/engine/game-options";
 import { GameState } from "@/lib/types/game-state";
 import { Stage, Graphics } from "@pixi/react";
 import { BoardMino, BoardPiece } from "./board-piece";

@@ -1,6 +1,6 @@
 import { getMatrix, PIECE_SPAWN } from "@/lib/engine/game";
 import { Block, BLOCK_COLORS } from "@/lib/engine/piece";
-import { BLOCK_SIZE, X_OFFSET, Y_OFFSET } from "@/lib/types/game-options";
+import { BLOCK_SIZE, X_OFFSET, Y_OFFSET } from "@/lib/engine/game-options";
 import { PieceData } from "@/lib/types/game-state";
 import { Graphics } from "@pixi/react";
 

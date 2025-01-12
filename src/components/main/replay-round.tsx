@@ -26,6 +26,10 @@ export const ReplayRound = ({ round }: { round: Round }) => {
   const [gameState, setGameState] = useState(
     createGameState(rng.getNextBag(10))
   );
+  // events.filter((ev) => {
+  //   ev.type==='ige' && ev.data.type===''
+  // })
+
   const [heldKeys, setHeldKeys] = useState<HeldKeys>({
     moveLeft: null,
     moveRight: null,
@@ -78,7 +82,7 @@ export const ReplayRound = ({ round }: { round: Round }) => {
     setHeldKeys(newHeldKeys);
     setGameState((prev) => {
       if (garbage) prev.garbageQueued.push(garbage);
-      return executeCommands(commands, prev);
+      return executeCommands(commands, prev, currEvent.frame);
     });
     setEventIndex((prev) => prev + 1);
   };
@@ -92,7 +96,11 @@ export const ReplayRound = ({ round }: { round: Round }) => {
       let result = processEvent(event, newHeldKeys);
       if (result.garbage) newGameState.garbageQueued.push(result.garbage);
 
-      newGameState = executeCommands(result.commands, newGameState);
+      newGameState = executeCommands(
+        result.commands,
+        newGameState,
+        event.frame
+      );
 
       newHeldKeys = result.newHeldKeys;
     }

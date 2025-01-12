@@ -18,7 +18,7 @@ export const GameReplay = ({ replay }: { replay: Replay }) => {
 
       <div className="flex flex-wrap">
         {replay.rounds[round].map((r) => (
-          <ReplayRound round={r} key={r.id} />
+          <ReplayRound round={r} key={`${round}-${r.id}`} />
         ))}
       </div>
     </div>

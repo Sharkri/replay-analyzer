@@ -1,4 +1,9 @@
-import { BOARD_WIDTH } from "../types/game-options";
+import {
+  BOARD_WIDTH,
+  ATTACK_TABLE,
+  DEFAULT_OPTIONS,
+  Options,
+} from "./game-options";
 import {
   Board,
   BoardRow,
@@ -39,6 +44,22 @@ const checkCollision = (board: Board, pieceData: PieceData) => {
   }
 
   return false;
+};
+
+const checkImmobile = (board: Board, pieceData: PieceData) => {
+  let directions = [
+    [0, -1], // Down
+    [0, 1], // Up
+    [-1, 0], // Left
+    [1, 0], // Right
+  ];
+
+  for (const [dx, dy] of directions) {
+    let test_piece = { ...pieceData, x: pieceData.x + dx, y: pieceData.y + dy };
+    if (!checkCollision(board, test_piece)) return false;
+  }
+
+  return true;
 };
 
 const clearLines = (board: Board) => {
@@ -102,6 +123,9 @@ export const createGameState = (queue: Piece[]): GameState => {
     dead: false,
     canHold: true,
     garbageQueued: [],
+    b2b: false,
+    combo: 0,
+    attackQueued: [],
   };
 };
 
@@ -137,14 +161,121 @@ export function addGarbage(board: Board, garbage: GarbageQueued) {
   }
 }
 
-export const hardDrop = (state: GameState) => {
+export const calculateAttack = (
+  state: GameState,
+  clearedLines: number,
+  immobile: boolean
+) => {
+  const { b2b, combo, current } = state;
+
+  if (clearedLines == 0) {
+    return { b2b, attack: 0, combo: 0 };
+  }
+
+  let attack = 0;
+  let isB2B = b2b;
+  let newCombo = combo + 1;
+
+  if (immobile && current.piece === "T") {
+    if (clearedLines === 1) attack += ATTACK_TABLE.tss;
+    else if (clearedLines === 2) attack += ATTACK_TABLE.tsd;
+    else if (clearedLines === 3) attack += ATTACK_TABLE.tst;
+    isB2B = true;
+  } else {
+    switch (clearedLines) {
+      case 1:
+        attack += ATTACK_TABLE.single;
+        isB2B = false;
+        break;
+      case 2:
+        attack += ATTACK_TABLE.double;
+        isB2B = false;
+        break;
+      case 3:
+        attack += ATTACK_TABLE.triple;
+        isB2B = false;
+        break;
+      case 4:
+        attack += ATTACK_TABLE.quad;
+        isB2B = true;
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  return { b2b: isB2B, attack, combo: newCombo };
+};
+
+/**
+ * Cancels garbageQueued using attackQueued.
+ * It modifies the gameState in place.
+ * @param gameState The current state of the game.
+ */
+function cancelGarbageWithAttacks(
+  gameState: GameState,
+  options: Options
+): void {
+  let attackIndex = 0;
+  let garbageIndex = 0;
+
+  while (
+    attackIndex < gameState.attackQueued.length &&
+    garbageIndex < gameState.garbageQueued.length
+  ) {
+    const attack = gameState.attackQueued[attackIndex];
+    const garbage = gameState.garbageQueued[garbageIndex];
+
+    if (Math.abs(attack.frame - garbage.frame) > options.garbagespeed) {
+      attackIndex++;
+      continue;
+    }
+
+    if (attack.amt >= garbage.amt) {
+      // Attack can fully cancel this garbage
+      attack.amt -= garbage.amt;
+      // Remove the garbage as it's fully canceled
+      gameState.garbageQueued.splice(garbageIndex, 1);
+
+      // If the attack has been fully used, move to the next attack
+      if (attack.amt === 0) {
+        attackIndex++;
+      }
+      // If not, continue with the same attack for the next garbage
+    } else {
+      // Attack can partially cancel this garbage
+      garbage.amt -= attack.amt;
+      // Move to the next attack as this one is fully used
+      attackIndex++;
+    }
+  }
+
+  // Optionally, remove any attacks that have been fully used
+  gameState.attackQueued = gameState.attackQueued.slice(attackIndex);
+}
+
+export const hardDrop = (state: GameState, frame: number) => {
+  const options = DEFAULT_OPTIONS;
+
   sonicDrop(state);
-  // TODO: immobile checks and garbage + a bunch of others
+  const immobile = checkImmobile(state.board, state.current);
+
   placePiece(state.board, state.current);
   const clearedLines = clearLines(state.board);
 
   const nextPiece = state.queue.shift();
   if (!nextPiece) throw new Error("Queue is empty");
+
+  let { attack, b2b, combo } = calculateAttack(state, clearedLines, immobile);
+
+  state.b2b = b2b;
+  state.combo = combo;
+
+  if (attack > 0) state.attackQueued.push({ frame, amt: attack });
+  cancelGarbageWithAttacks(state, options);
+
+  console.log({ attack, b2b, qed: state.garbageQueued, clearedLines });
 
   if (clearedLines == 0) {
     while (state.garbageQueued.length > 0) {
@@ -235,12 +366,16 @@ export const hold = (state: GameState) => {
   state.canHold = false;
 };
 
-export const executeCommand = (command: Command, state: GameState) => {
+export const executeCommand = (
+  command: Command,
+  state: GameState,
+  frame: number
+) => {
   const newGameState = structuredClone(state);
 
   switch (command) {
     case "hardDrop":
-      hardDrop(newGameState);
+      hardDrop(newGameState, frame);
       break;
     case "moveLeft":
       moveLeft(newGameState);
@@ -279,11 +414,15 @@ export const executeCommand = (command: Command, state: GameState) => {
   return newGameState;
 };
 
-export const executeCommands = (commands: Command[], state: GameState) => {
+export const executeCommands = (
+  commands: Command[],
+  state: GameState,
+  frame: number
+) => {
   let newState = state;
   // probably not the most efficient to use structuredClone a bunch of times but its probably fine
   for (const command of commands) {
-    newState = executeCommand(command, newState);
+    newState = executeCommand(command, newState, frame);
   }
 
   return newState;

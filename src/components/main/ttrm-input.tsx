@@ -9,6 +9,9 @@ function TTRMInput({ onChange }: { onChange: (ttrm: TTRM) => void }) {
       try {
         const contents = event.target?.result as string; // This contains the file contents
         const parsedJSON = JSON.parse(contents);
+
+        console.log(parsedJSON);
+
         const validatedData = TTRMSchema.parse(parsedJSON);
         onChange(validatedData);
       } catch (error) {
