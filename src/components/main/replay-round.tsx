@@ -17,8 +17,6 @@ export const ReplayRound = ({ round }: { round: Round }) => {
   const { events, options } = replay;
   const { handling, seed } = options;
 
-  console.log(seed);
-
   const rng = new GameRNG(seed);
   const rngex = new GameRNG(seed);
 

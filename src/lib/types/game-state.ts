@@ -5,7 +5,12 @@ export const PIECE_BAG: Piece[] = ["Z", "L", "O", "S", "I", "J", "T"];
 export type BoardRow = (Block | null)[];
 export type Board = BoardRow[];
 export type Rotation = 0 | 1 | 2 | 3;
-export type GarbageQueued = { column: number; frame: number; amt: number };
+export type GarbageQueued = {
+  column: number;
+  cancelFrame: number;
+  amt: number;
+  frame: number;
+};
 export type AttackQueued = { amt: number; frame: number };
 
 export type GameState = {

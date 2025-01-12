@@ -231,7 +231,7 @@ function cancelGarbageWithAttacks(
     const attack = gameState.attackQueued[attackIndex];
     const garbage = gameState.garbageQueued[garbageIndex];
 
-    if (Math.abs(attack.frame - garbage.frame) > options.garbagespeed) {
+    if (Math.abs(attack.frame - garbage.cancelFrame) > options.garbagespeed) {
       attackIndex++;
       continue;
     }
@@ -282,10 +282,15 @@ export const hardDrop = (state: GameState, frame: number) => {
   console.log({ attack, b2b, qed: state.garbageQueued, clearedLines });
 
   if (clearedLines == 0) {
-    while (state.garbageQueued.length > 0) {
-      const garbage = state.garbageQueued.shift();
-      if (garbage != null) addGarbage(state.board, garbage);
-    }
+    state.garbageQueued = state.garbageQueued.filter((garbage) => {
+      const diff = frame - garbage.frame;
+      if (diff <= options.garbagespeed) {
+        return true;
+      }
+
+      addGarbage(state.board, garbage);
+      return false;
+    });
   }
 
   const { collides, piece_data } = spawnPiece(state.board, nextPiece);

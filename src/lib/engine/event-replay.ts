@@ -84,7 +84,7 @@ export const handleIGEEvent = (event: IGEEvent, rng: GameRNG) => {
         const { amt, frame } = data.data;
         const column = Math.floor(rng.nextFloat() * 10);
 
-        return { amt, column, frame };
+        return { amt, column, cancelFrame: frame, frame: event.frame };
       }
       break;
 
