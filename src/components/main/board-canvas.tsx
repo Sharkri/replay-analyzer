@@ -9,7 +9,7 @@ import { GameState } from "@/lib/types/game-state";
 import { Stage, Graphics } from "@pixi/react";
 import { BoardMino, BoardPiece } from "./board-piece";
 import { BoardQueue } from "./board-queue";
-import { placePiece } from "@/lib/engine/game";
+import { placePiece } from "@/lib/engine/game-matrix";
 
 const BoardCanvas = ({ gameState }: { gameState: GameState }) => {
   const options = {

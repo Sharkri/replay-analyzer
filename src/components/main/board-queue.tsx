@@ -1,7 +1,6 @@
 import { Piece } from "@/lib/engine/piece";
 import { BoardPiece } from "./board-piece";
-import { BOARD_WIDTH } from "@/lib/engine/game-options";
-import { PIECE_SPAWN } from "@/lib/engine/game";
+import { BOARD_WIDTH, PIECE_SPAWN } from "@/lib/engine/game-options";
 
 export const BoardQueue = ({ queue }: { queue: Piece[] }) => {
   return queue.map((piece, index) => (

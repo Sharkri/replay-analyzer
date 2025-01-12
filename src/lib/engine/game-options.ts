@@ -21,3 +21,5 @@ export const DEFAULT_OPTIONS: Options = {
 };
 
 export type Options = { garbagespeed: number };
+
+export const PIECE_SPAWN = 21;
