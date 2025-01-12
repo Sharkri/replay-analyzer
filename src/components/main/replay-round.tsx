@@ -31,8 +31,6 @@ export const ReplayRound = ({ round }: { round: Round }) => {
     softDrop: null,
   });
 
-  const currEvent = events[eventIndex];
-
   const processEvent = (event: ReplayEvent, heldKeys: HeldKeys) => {
     let newHeldKeys = structuredClone(heldKeys);
     const commands: Command[] = [];
@@ -69,19 +67,6 @@ export const ReplayRound = ({ round }: { round: Round }) => {
     return { commands, newHeldKeys, garbage };
   };
 
-  const handleNextEvent = () => {
-    const { commands, newHeldKeys, garbage } = processEvent(
-      currEvent,
-      heldKeys
-    );
-    setHeldKeys(newHeldKeys);
-    setGameState((prev) => {
-      if (garbage) prev.garbageQueued.push(garbage);
-      return executeCommands(commands, prev, currEvent.frame);
-    });
-    setEventIndex((prev) => prev + 1);
-  };
-
   const handleBatchEvents = (count: number) => {
     let newGameState = gameState;
     let newHeldKeys = heldKeys;
@@ -107,8 +92,7 @@ export const ReplayRound = ({ round }: { round: Round }) => {
 
   return (
     <div>
-      <Button onClick={handleNextEvent}>Next Event</Button>
-
+      <Button onClick={() => handleBatchEvents(1)}>Next Event</Button>
       <Button onClick={() => handleBatchEvents(5)}>Next Piece</Button>
 
       {round.username}
