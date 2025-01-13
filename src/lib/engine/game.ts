@@ -7,6 +7,7 @@ import {
   hold,
   moveLeft,
   moveRight,
+  rotate180,
   rotateCCW,
   rotateCW,
   softDrop,
@@ -64,7 +65,7 @@ export const executeCommand = (
       hold(newGameState);
       break;
     case "rotate180":
-      console.log("180 not implemented yet...");
+      rotate180(newGameState);
       break;
     case "dasLeft":
       while (moveLeft(newGameState)) {}

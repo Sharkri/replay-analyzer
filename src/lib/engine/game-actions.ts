@@ -42,6 +42,12 @@ const rotate = (state: GameState, direction: 1 | -1) => {
 };
 export const rotateCW = (state: GameState) => rotate(state, 1);
 export const rotateCCW = (state: GameState) => rotate(state, -1);
+export const rotate180 = (state: GameState) => {
+  if (state.dead) throw new Error("Cannot act when dead");
+  const newRotation = ((state.current.rotation + 2) % 4) as Rotation;
+  const wallKickData = tryWallKicks(state.board, state.current, newRotation);
+  if (wallKickData.success) state.current = wallKickData.pieceData;
+};
 
 export const softDrop = (state: GameState) => {
   if (state.dead) throw new Error("Cannot act when dead");
