@@ -1,25 +1,24 @@
 import { Replay } from "@/lib/types/ttrm";
 import { Button } from "../ui/button";
 import { useState } from "react";
-import { ReplayRound } from "./replay-round";
+import { GameRound } from "./round";
 
 export const GameReplay = ({ replay }: { replay: Replay }) => {
-  const [round, setRound] = useState(0);
+  const [roundIndex, setRoundIndex] = useState(0);
+  const round = replay.rounds[roundIndex];
 
   return (
     <div>
       <Button
         onClick={() => {
-          setRound((prev) => prev + 1);
+          setRoundIndex((prev) => prev + 1);
         }}
       >
         Next Round
       </Button>
 
       <div className="flex flex-wrap">
-        {replay.rounds[round].map((r) => (
-          <ReplayRound round={r} key={`${round}-${r.id}`} />
-        ))}
+        <GameRound round={round} key={roundIndex} />
       </div>
     </div>
   );

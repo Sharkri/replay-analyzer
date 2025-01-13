@@ -114,6 +114,7 @@ export const optionsSchema = z.object({
     may20g: z.boolean(),
   }),
   seed: z.number(),
+  gameid: z.number(),
 });
 
 export const roundReplaySchema = z.object({
@@ -123,7 +124,7 @@ export const roundReplaySchema = z.object({
   results: z.any(),
 });
 
-export const roundSchema = z.object({
+export const playerSchema = z.object({
   username: z.string(),
   stats: statsSchema,
   id: z.string(),
@@ -132,7 +133,7 @@ export const roundSchema = z.object({
 
 export const replaySchema = z.object({
   leaderboard: z.any(),
-  rounds: z.array(z.tuple([roundSchema, roundSchema])),
+  rounds: z.array(z.tuple([playerSchema, playerSchema])),
 });
 
 export const TTRMSchema = z.object({
@@ -141,7 +142,7 @@ export const TTRMSchema = z.object({
 
 export type Replay = z.infer<typeof replaySchema>;
 export type ReplayEvent = z.infer<typeof eventSchema>;
-export type Round = z.infer<typeof roundSchema>;
+export type Player = z.infer<typeof playerSchema>;
 export type TTRM = z.infer<typeof TTRMSchema>;
 export type GameCommand = z.infer<typeof keyEnum>;
 export type KeyEvent = z.infer<typeof keyEvent>;

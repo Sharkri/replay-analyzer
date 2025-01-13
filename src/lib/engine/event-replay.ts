@@ -44,8 +44,6 @@ export const getHeldKeyCommands = (
   const currentFrame = event.frame + event.data.subframe;
   const commands: Command[] = [];
 
-  console.log(heldKeys);
-
   // order doesnt seem to do anything but idk
   const keys = Object.entries(heldKeys).sort(([, a], [, b]) =>
     a && b ? b.order - a.order : 0
@@ -71,7 +69,6 @@ export const getHeldKeyCommands = (
 
 export const handleIGEEvent = (event: IGEEvent, rng: GameRNG) => {
   console.log(`Processing IGE event:`, event);
-  // Add logic to handle IGE events based on their structure
 
   const { data } = event;
   switch (data.type) {
