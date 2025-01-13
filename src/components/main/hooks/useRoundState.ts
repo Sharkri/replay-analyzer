@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Player, ReplayEvent } from "@/lib/types/ttrm";
+import { Round, ReplayEvent } from "@/lib/types/ttrm";
 import { Command, createGameState, executeCommands } from "@/lib/engine/game";
 import { GameRNG } from "@/lib/engine/rng";
 import {
@@ -9,9 +9,18 @@ import {
   HeldKeys,
   handleIGEEvent,
 } from "@/lib/engine/event-replay";
+import { GameState } from "@/lib/types/game-state";
 
-export const useRoundState = (round: Player[]) => {
-  const [playerStates, setPlayerStates] = useState(
+type PlayerState = {
+  heldKeys: HeldKeys;
+  rng: GameRNG;
+  rngex: GameRNG;
+  eventIndex: number;
+  gameState: GameState;
+};
+
+export const useRoundState = (round: Round[]) => {
+  const [playerStates, setPlayerStates] = useState<PlayerState[]>(
     round.map((player) => {
       const { seed } = player.replay.options;
       const [rng, rngex] = [new GameRNG(seed), new GameRNG(seed)];
@@ -59,43 +68,63 @@ export const useRoundState = (round: Player[]) => {
     []
   );
 
-  const handleBatchEvents = useCallback(
-    (index: number, count: number) => {
-      setPlayerStates((prevStates) =>
-        prevStates.map((state, idx) => {
-          if (idx !== index) return state;
+  const processEventsToFrame = (
+    player: PlayerState,
+    round: Round,
+    targetFrame: number
+  ) => {
+    let { rngex, eventIndex, gameState, heldKeys } = player;
+    const { events, options } = round.replay;
+    const { handling } = options;
 
-          let { rngex, eventIndex, gameState, heldKeys } = state;
+    let newGameState = gameState;
 
-          const { replay } = round[idx];
-          const { events, options } = replay;
-          const { handling } = options;
-          let newGameState = gameState;
+    let i = eventIndex;
+    for (; i < events.length; i++) {
+      const event = events[i];
+      // if target frame is reached, exit
+      if (event.frame > targetFrame) {
+        break;
+      }
+      // process events and apply changes
+      const evt = processEvent(event, heldKeys, handling, rngex);
+      if (evt.garbage) newGameState.garbageQueued.push(evt.garbage);
+      newGameState = executeCommands(evt.commands, newGameState, event.frame);
+      heldKeys = evt.newHeldKeys;
+    }
 
-          for (let i = 0; i < count; i++) {
-            const event = events[eventIndex + i];
-            const evt = processEvent(event, heldKeys, handling, rngex);
-            if (evt.garbage) newGameState.garbageQueued.push(evt.garbage);
+    return {
+      ...player,
+      eventIndex: i,
+      gameState: newGameState,
+      heldKeys,
+    };
+  };
 
-            newGameState = executeCommands(
-              evt.commands,
-              newGameState,
-              event.frame
-            );
-            heldKeys = evt.newHeldKeys;
-          }
+  const handleNextFrame = useCallback(
+    (frameIncrement: number) => {
+      setPlayerStates((prevStates) => {
+        // Calculate the min next frame across all players
+        const nextFrame = Math.min(
+          ...prevStates.map((state, idx) => {
+            const { eventIndex } = state;
+            const { replay } = round[idx];
+            const event = replay.events[eventIndex];
+            return event ? event.frame : Infinity;
+          })
+        );
+        if (nextFrame === Infinity) return prevStates;
 
-          return {
-            ...state,
-            eventIndex: eventIndex + count,
-            gameState: newGameState,
-            heldKeys,
-          };
-        })
-      );
+        // Process all players up to the target frame
+        return prevStates.map((state, idx) => {
+          const targetFrame = nextFrame + frameIncrement;
+          const newState = processEventsToFrame(state, round[idx], targetFrame);
+          return newState;
+        });
+      });
     },
-    [round, processEvent]
+    [round, processEventsToFrame]
   );
 
-  return { playerStates, handleBatchEvents };
+  return { playerStates, handleNextFrame };
 };

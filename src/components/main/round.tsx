@@ -1,27 +1,22 @@
-import { Player } from "@/lib/types/ttrm";
+import { Round } from "@/lib/types/ttrm";
 import { PlayerBoard } from "./player-board";
 import { Button } from "../ui/button";
 import { useRoundState } from "./hooks/useRoundState";
 
-export const GameRound = ({ round }: { round: Player[] }) => {
-  const { playerStates, handleBatchEvents } = useRoundState(round);
+export const GameRound = ({ round }: { round: Round[] }) => {
+  const { playerStates, handleNextFrame } = useRoundState(round);
 
   return (
     <div>
-      <Button
-        onClick={() => {
-          round.forEach((_, index) => handleBatchEvents(index, 5));
-        }}
-      >
-        Advance Both
-      </Button>
+      <Button onClick={() => handleNextFrame(16.67)}>Advance Both</Button>
+      <Button onClick={() => handleNextFrame(0)}>Advance Both tiny</Button>
+
       <div className="flex flex-wrap">
         {round.map((player, index) => (
           <PlayerBoard
             key={`${player.replay.options.gameid}`}
             player={player}
             gameState={playerStates[index].gameState}
-            onHandleBatchEvents={(n) => handleBatchEvents(index, n)}
           />
         ))}
       </div>

@@ -142,7 +142,7 @@ export const TTRMSchema = z.object({
 
 export type Replay = z.infer<typeof replaySchema>;
 export type ReplayEvent = z.infer<typeof eventSchema>;
-export type Player = z.infer<typeof playerSchema>;
+export type Round = z.infer<typeof playerSchema>;
 export type TTRM = z.infer<typeof TTRMSchema>;
 export type GameCommand = z.infer<typeof keyEnum>;
 export type KeyEvent = z.infer<typeof keyEvent>;
