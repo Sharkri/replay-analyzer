@@ -3,42 +3,46 @@ import { Piece } from "./piece";
 
 const RNG_SEED = 2147483647;
 
-export class GameRNG {
-  seed: number;
-  constructor(seed: number) {
-    this.seed = seed % RNG_SEED;
-    if (this.seed <= 0) {
-      this.seed += RNG_SEED - 1;
-      this.seed = this.seed || 1;
-    }
+export const getRngSeed = (seed: number) => {
+  let rngSeed = seed % RNG_SEED;
+  if (rngSeed <= 0) {
+    rngSeed += RNG_SEED - 1;
+    rngSeed = rngSeed || 1;
   }
 
-  next() {
-    this.seed = (16807 * this.seed) % RNG_SEED;
-    return this.seed;
+  return rngSeed;
+};
+
+export const next = (seed: number) => (16807 * seed) % RNG_SEED;
+export const nextFloat = (seed: number) => {
+  const nextSeed = next(seed);
+  return { float: (nextSeed - 1) / (RNG_SEED - 1), nextSeed };
+};
+
+export const shuffleArray = (arr: Piece[], seed: number) => {
+  let n = arr.length;
+  const newArray = [...arr];
+  let currSeed = seed;
+
+  for (; n > 1; n--) {
+    const { float, nextSeed } = nextFloat(currSeed);
+    const t = Math.floor(float * n);
+    [newArray[n - 1], newArray[t]] = [newArray[t], newArray[n - 1]];
+    currSeed = nextSeed;
   }
 
-  nextFloat() {
-    return (this.next() - 1) / (RNG_SEED - 1);
+  return { shuffled: newArray, nextSeed: currSeed };
+};
+
+export const getNextBag = (seed: number, bags = 1) => {
+  let currSeed = seed;
+  const queue: Piece[] = [];
+
+  for (let i = 0; i < bags; i++) {
+    const { shuffled, nextSeed } = shuffleArray([...PIECE_BAG], currSeed);
+    queue.push(...shuffled);
+    currSeed = nextSeed;
   }
 
-  shuffleArray(arr: Piece[]) {
-    let n = arr.length;
-    for (; n > 1; n--) {
-      let t = Math.floor(this.nextFloat() * n);
-      [arr[n - 1], arr[t]] = [arr[t], arr[n - 1]];
-    }
-
-    return arr;
-  }
-
-  getNextBag(bags = 1) {
-    const queue = [];
-
-    for (let i = 0; i < bags; i++) {
-      queue.push(...this.shuffleArray([...PIECE_BAG]));
-    }
-
-    return queue as Piece[];
-  }
-}
+  return { queue, nextSeed: currSeed };
+};
