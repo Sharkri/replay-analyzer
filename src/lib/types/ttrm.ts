@@ -103,16 +103,18 @@ export const statsSchema = z.object({
   vsscore: z.number(),
 });
 
+export const handlingSchema = z.object({
+  arr: z.number(),
+  das: z.number(),
+  dcd: z.number(),
+  sdf: z.number(),
+  safelock: z.boolean(),
+  cancel: z.boolean(),
+  may20g: z.boolean(),
+});
+
 export const optionsSchema = z.object({
-  handling: z.object({
-    arr: z.number(),
-    das: z.number(),
-    dcd: z.number(),
-    sdf: z.number(),
-    safelock: z.boolean(),
-    cancel: z.boolean(),
-    may20g: z.boolean(),
-  }),
+  handling: handlingSchema,
   seed: z.number(),
   gameid: z.number(),
   openerphase: z.number().default(0),
@@ -145,6 +147,7 @@ export const TTRMSchema = z.object({
 export type Replay = z.infer<typeof replaySchema>;
 export type ReplayEvent = z.infer<typeof eventSchema>;
 export type Round = z.infer<typeof playerSchema>;
+export type Handling = z.infer<typeof handlingSchema>;
 export type GameOptions = z.infer<typeof optionsSchema>;
 export type TTRM = z.infer<typeof TTRMSchema>;
 export type GameCommand = z.infer<typeof keyEnum>;

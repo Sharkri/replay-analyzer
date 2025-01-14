@@ -1,4 +1,4 @@
-import { IGEEvent, KeyEvent } from "@/lib/types/ttrm";
+import { Handling, IGEEvent, KeyEvent } from "@/lib/types/ttrm";
 import { Command } from "@/lib/engine/game";
 import { GameRNG } from "./rng";
 
@@ -38,7 +38,7 @@ export const handleKeyUp = (event: KeyEvent, heldKeys: HeldKeys) => {
 export const getHeldKeyCommands = (
   event: KeyEvent,
   heldKeys: HeldKeys,
-  handling: { das: number; arr: number }
+  handling: Handling
 ) => {
   const { das, arr } = handling;
   const currentFrame = event.frame + event.data.subframe;

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Round, ReplayEvent } from "@/lib/types/ttrm";
+import { Round, ReplayEvent, Handling } from "@/lib/types/ttrm";
 import { Command, createGameState, executeCommands } from "@/lib/engine/game";
 import { GameRNG } from "@/lib/engine/rng";
 import {
@@ -39,7 +39,7 @@ export const useRoundState = (round: Round[]) => {
     (
       event: ReplayEvent,
       heldKeys: HeldKeys,
-      handling: { das: number; arr: number },
+      handling: Handling,
       rngex: GameRNG
     ) => {
       let newHeldKeys = structuredClone(heldKeys);
