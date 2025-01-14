@@ -119,6 +119,14 @@ export const optionsSchema = z.object({
   gameid: z.number(),
   openerphase: z.number().default(0),
   garbagespeed: z.number().default(0),
+  spinbonuses: z.enum([
+    "all-mini",
+    "t-spins",
+    "all-spin",
+    "handheld",
+    "stupid",
+    "none",
+  ]),
 });
 
 export const roundReplaySchema = z.object({

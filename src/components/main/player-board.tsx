@@ -12,14 +12,15 @@ export const PlayerBoard = ({
   return (
     <div>
       {player.username}
-      {JSON.stringify(
-        {
-          attack: gameState.attackQueued,
-          garbage: gameState.garbageQueued,
-        },
-        null,
-        2
-      )}
+      <div className="">
+        {JSON.stringify(
+          {
+            garbage: gameState.garbageQueued,
+          },
+          null,
+          2
+        )}
+      </div>
 
       <BoardCanvas gameState={gameState} />
     </div>

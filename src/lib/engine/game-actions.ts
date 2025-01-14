@@ -97,7 +97,12 @@ export const hardDrop = (
   placePiece(state.board, state.current);
   const clearedLines = clearLines(state.board);
 
-  let { attack, b2b, combo } = calculateAttack(state, clearedLines, immobile);
+  let { attack, b2b, combo } = calculateAttack(
+    state,
+    clearedLines,
+    immobile,
+    options
+  );
   state.b2b = b2b;
   state.combo = combo;
 

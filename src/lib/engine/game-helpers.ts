@@ -6,7 +6,8 @@ import { nextFloat } from "./rng";
 export const calculateAttack = (
   state: GameState,
   clearedLines: number,
-  immobile: boolean
+  immobile: boolean,
+  options: GameOptions
 ) => {
   const { b2b, combo, current } = state;
 
@@ -19,6 +20,7 @@ export const calculateAttack = (
   let newCombo = combo + 1;
 
   if (immobile && current.piece === "T") {
+    // TODO: tsm is detected as tss
     if (clearedLines === 1) attack += ATTACK_TABLE.tss;
     else if (clearedLines === 2) attack += ATTACK_TABLE.tsd;
     else if (clearedLines === 3) attack += ATTACK_TABLE.tst;
@@ -41,9 +43,11 @@ export const calculateAttack = (
         attack += ATTACK_TABLE.quad;
         isB2BClear = true;
         break;
-      default:
-        break;
     }
+  }
+
+  if (options.spinbonuses === "all-mini" && immobile) {
+    isB2BClear = true;
   }
 
   if (b2b && isB2BClear) {
