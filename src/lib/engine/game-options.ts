@@ -16,10 +16,4 @@ export const ATTACK_TABLE = {
   b2b: 1,
 };
 
-export const DEFAULT_OPTIONS: Options = {
-  garbagespeed: 20,
-};
-
-export type Options = { garbagespeed: number };
-
 export const PIECE_SPAWN = 21;

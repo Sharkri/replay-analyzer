@@ -1,4 +1,5 @@
 import { GameState, Rotation } from "../types/game-state";
+import { GameOptions } from "../types/ttrm";
 import { addGarbage, calculateAttack, cancelGarbage } from "./game-helpers";
 import {
   checkCollision,
@@ -8,7 +9,6 @@ import {
   spawnPiece,
   tryWallKicks,
 } from "./game-matrix";
-import { DEFAULT_OPTIONS } from "./game-options";
 
 export const moveLeft = (state: GameState) => {
   if (state.dead) console.error("Cannot act when dead");
@@ -83,8 +83,13 @@ export const hold = (state: GameState) => {
   state.dead = collides;
 };
 
-export const hardDrop = (state: GameState, frame: number) => {
-  const options = DEFAULT_OPTIONS;
+export const hardDrop = (
+  state: GameState,
+  frame: number,
+  options: GameOptions
+) => {
+  state.piecesPlaced++;
+
   sonicDrop(state);
   // note: immobile check must be before placing piece
   const immobile = checkImmobile(state.board, state.current);
@@ -96,10 +101,12 @@ export const hardDrop = (state: GameState, frame: number) => {
   state.b2b = b2b;
   state.combo = combo;
 
-  if (attack > 0) state.attackQueued.push({ frame, amt: attack });
-  cancelGarbage(state, options);
+  if (attack > 0) {
+    const openerphase = state.piecesPlaced < options.openerphase;
+    state.attackQueued.push({ frame, amt: attack, doubled: openerphase });
+  }
 
-  console.log({ attack, b2b, qed: state.garbageQueued, clearedLines });
+  cancelGarbage(state, options);
 
   if (clearedLines == 0) {
     state.garbageQueued = state.garbageQueued.filter((garbage) => {

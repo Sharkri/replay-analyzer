@@ -115,6 +115,8 @@ export const optionsSchema = z.object({
   }),
   seed: z.number(),
   gameid: z.number(),
+  openerphase: z.number().default(0),
+  garbagespeed: z.number().default(0),
 });
 
 export const roundReplaySchema = z.object({
@@ -143,6 +145,7 @@ export const TTRMSchema = z.object({
 export type Replay = z.infer<typeof replaySchema>;
 export type ReplayEvent = z.infer<typeof eventSchema>;
 export type Round = z.infer<typeof playerSchema>;
+export type GameOptions = z.infer<typeof optionsSchema>;
 export type TTRM = z.infer<typeof TTRMSchema>;
 export type GameCommand = z.infer<typeof keyEnum>;
 export type KeyEvent = z.infer<typeof keyEvent>;

@@ -1,5 +1,5 @@
 import { Board, GameState } from "../types/game-state";
-import { GameCommand } from "../types/ttrm";
+import { GameCommand, GameOptions } from "../types/ttrm";
 import { Piece } from "./piece";
 import { spawnPiece } from "./game-matrix";
 import {
@@ -31,19 +31,21 @@ export const createGameState = (queue: Piece[]): GameState => {
     b2b: false,
     combo: 0,
     attackQueued: [],
+    piecesPlaced: 0,
   };
 };
 
 export const executeCommand = (
   command: Command,
   state: GameState,
-  frame: number
+  frame: number,
+  options: GameOptions
 ) => {
   const newGameState = structuredClone(state);
 
   switch (command) {
     case "hardDrop":
-      hardDrop(newGameState, frame);
+      hardDrop(newGameState, frame, options);
       break;
     case "moveLeft":
       moveLeft(newGameState);
@@ -85,12 +87,13 @@ export const executeCommand = (
 export const executeCommands = (
   commands: Command[],
   state: GameState,
-  frame: number
+  frame: number,
+  options: GameOptions
 ) => {
   let newState = state;
   // probably not the most efficient to use structuredClone a bunch of times but its probably fine
   for (const command of commands) {
-    newState = executeCommand(command, newState, frame);
+    newState = executeCommand(command, newState, frame, options);
   }
   return newState;
 };

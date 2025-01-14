@@ -11,7 +11,7 @@ export type GarbageQueued = {
   amt: number;
   frame: number;
 };
-export type AttackQueued = { amt: number; frame: number };
+export type AttackQueued = { amt: number; frame: number; doubled: boolean };
 
 export type GameState = {
   queue: Piece[];
@@ -24,6 +24,7 @@ export type GameState = {
   combo: number;
   b2b: boolean;
   attackQueued: AttackQueued[];
+  piecesPlaced: number;
 };
 
 export type PieceData = {
