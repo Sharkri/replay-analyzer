@@ -1,6 +1,5 @@
 import { Board, GameState } from "../types/game-state";
 import { GameCommand, GameOptions } from "../types/ttrm";
-import { Piece } from "./piece";
 import { spawnPiece } from "./game-matrix";
 import {
   hardDrop,
@@ -12,13 +11,19 @@ import {
   rotateCW,
   softDrop,
 } from "./game-actions";
+import { getNextBag, getRngSeed } from "./rng";
 
 export type Command = GameCommand | "dasLeft" | "dasRight";
 
-export const createGameState = (queue: Piece[]): GameState => {
+export const createGameState = (bags: number, seed: number): GameState => {
   const board: Board = [];
 
-  const gameQueue = [...queue];
+  let rng = getRngSeed(seed);
+  const bag = getNextBag(rng, bags);
+  rng = bag.nextSeed;
+
+  const gameQueue = [...bag.queue];
+
   const current = spawnPiece(board, gameQueue.shift() || "I");
 
   return {
@@ -32,6 +37,8 @@ export const createGameState = (queue: Piece[]): GameState => {
     combo: 0,
     attackQueued: [],
     piecesPlaced: 0,
+    rng,
+    rngex: getRngSeed(seed),
   };
 };
 

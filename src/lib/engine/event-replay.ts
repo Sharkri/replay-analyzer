@@ -1,6 +1,5 @@
 import { Handling, IGEEvent, KeyEvent } from "@/lib/types/ttrm";
 import { Command } from "@/lib/engine/game";
-import { nextFloat } from "./rng";
 
 export type HeldKey = { frame: number; order: number } | null;
 export type HeldKeys = Record<"moveLeft" | "moveRight" | "softDrop", HeldKey>;
@@ -67,7 +66,7 @@ export const getHeldKeyCommands = (
   return commands;
 };
 
-export const handleIGEEvent = (event: IGEEvent, seed: number) => {
+export const handleIGEEvent = (event: IGEEvent) => {
   console.log(`Processing IGE event:`, event);
 
   const { data } = event;
@@ -80,13 +79,7 @@ export const handleIGEEvent = (event: IGEEvent, seed: number) => {
       if (data.data.type === "garbage") {
         const { amt, frame } = data.data;
 
-        const { float, nextSeed } = nextFloat(seed);
-        const column = Math.floor(float * 10);
-
-        return {
-          garbage: { amt, column, cancelFrame: frame, frame: event.frame },
-          nextSeed,
-        };
+        return { amt, cancelFrame: frame, frame: event.frame };
       }
       break;
 

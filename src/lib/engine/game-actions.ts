@@ -113,7 +113,7 @@ export const hardDrop = (
       const diff = frame - garbage.frame;
       if (diff <= options.garbagespeed) return true;
 
-      addGarbage(state.board, garbage);
+      addGarbage(state, garbage);
       return false;
     });
   }

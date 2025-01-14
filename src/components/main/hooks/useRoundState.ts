@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { Round, ReplayEvent, Handling } from "@/lib/types/ttrm";
 import { Command, createGameState, executeCommands } from "@/lib/engine/game";
-import { getNextBag, getRngSeed } from "@/lib/engine/rng";
 import {
   getHeldKeyCommands,
   processKeyDown,
@@ -13,8 +12,6 @@ import { GameState } from "@/lib/types/game-state";
 
 type PlayerState = {
   heldKeys: HeldKeys;
-  rng: number;
-  rngex: number;
   eventIndex: number;
   gameState: GameState;
 };
@@ -23,30 +20,20 @@ export const useRoundState = (round: Round[]) => {
   const [playerStates, setPlayerStates] = useState<PlayerState[]>(
     round.map((player) => {
       const { seed } = player.replay.options;
-      let rng = getRngSeed(seed);
-      let rngex = getRngSeed(seed);
 
-      const bag = getNextBag(rng, 10);
-      rng = bag.nextSeed;
-
-      const gameState = createGameState(bag.queue);
+      const gameState = createGameState(10, seed);
       const heldKeys = {
         moveLeft: null,
         moveRight: null,
         softDrop: null,
       } as HeldKeys;
 
-      return { heldKeys, rng, rngex, eventIndex: 0, gameState };
+      return { heldKeys, eventIndex: 0, gameState };
     })
   );
 
   const processEvent = useCallback(
-    (
-      event: ReplayEvent,
-      heldKeys: HeldKeys,
-      handling: Handling,
-      rngex: number
-    ) => {
+    (event: ReplayEvent, heldKeys: HeldKeys, handling: Handling) => {
       let newHeldKeys = structuredClone(heldKeys);
       const commands: Command[] = [];
       let garbage = null;
@@ -64,7 +51,7 @@ export const useRoundState = (round: Round[]) => {
           commands.push(...getHeldKeyCommands(event, heldKeys, handling));
           break;
         case "ige":
-          garbage = handleIGEEvent(event, rngex);
+          garbage = handleIGEEvent(event);
           break;
         case "end":
           console.log(`Game ended at frame ${event.frame}`);
@@ -83,11 +70,10 @@ export const useRoundState = (round: Round[]) => {
     round: Round,
     targetFrame: number
   ) => {
-    let { rngex, eventIndex, gameState, heldKeys } = player;
+    let { eventIndex, gameState, heldKeys } = player;
     const { events, options } = round.replay;
 
     let newState = structuredClone(gameState);
-    let newRngEx = rngex;
 
     let i = eventIndex;
     for (; i < events.length; i++) {
@@ -97,12 +83,8 @@ export const useRoundState = (round: Round[]) => {
         break;
       }
       // process events and apply changes
-      const evt = processEvent(event, heldKeys, options.handling, newRngEx);
-
-      if (evt.garbage) {
-        newState.garbageQueued.push(evt.garbage.garbage);
-        newRngEx = evt.garbage.nextSeed;
-      }
+      const evt = processEvent(event, heldKeys, options.handling);
+      if (evt.garbage) newState.garbageQueued.push(evt.garbage);
 
       newState = executeCommands(evt.commands, newState, event.frame, options);
       heldKeys = evt.newHeldKeys;
@@ -113,7 +95,6 @@ export const useRoundState = (round: Round[]) => {
       eventIndex: i,
       gameState: newState,
       heldKeys,
-      rngex: newRngEx,
     };
   };
 

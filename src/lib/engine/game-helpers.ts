@@ -1,6 +1,7 @@
-import { Board, BoardRow, GameState, GarbageQueued } from "../types/game-state";
+import { BoardRow, GameState, GarbageQueued } from "../types/game-state";
 import { GameOptions } from "../types/ttrm";
 import { ATTACK_TABLE } from "./game-options";
+import { nextFloat } from "./rng";
 
 export const calculateAttack = (
   state: GameState,
@@ -52,11 +53,15 @@ export const calculateAttack = (
   return { b2b: isB2BClear, attack, combo: newCombo };
 };
 
-export const addGarbage = (board: Board, garbage: GarbageQueued) => {
+export const addGarbage = (state: GameState, garbage: GarbageQueued) => {
+  const { float, nextSeed } = nextFloat(state.rngex);
+  const column = Math.floor(float * 10);
+  state.rngex = nextSeed;
+
   for (let i = 0; i < garbage.amt; i++) {
     const line: BoardRow = Array.from({ length: 10 }, () => "G");
-    line[garbage.column] = null;
-    board.unshift(line);
+    line[column] = null;
+    state.board.unshift(line);
   }
 };
 
