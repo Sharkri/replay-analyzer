@@ -118,7 +118,7 @@ export const optionsSchema = z.object({
   seed: z.number(),
   gameid: z.number(),
   openerphase: z.number().default(0),
-  garbagespeed: z.number().default(0),
+  garbagespeed: z.number().default(20),
   spinbonuses: z.enum([
     "all-mini",
     "t-spins",
