@@ -16,7 +16,7 @@ export const calculateAttack = (
   }
 
   let attack = 0;
-  let isB2BClear = false;
+  let b2bCount = b2b;
   let newCombo = combo + 1;
 
   if (immobile && current.piece === "T") {
@@ -24,37 +24,36 @@ export const calculateAttack = (
     if (clearedLines === 1) attack += ATTACK_TABLE.tss;
     else if (clearedLines === 2) attack += ATTACK_TABLE.tsd;
     else if (clearedLines === 3) attack += ATTACK_TABLE.tst;
-    isB2BClear = true;
+    b2bCount++;
   } else {
     switch (clearedLines) {
       case 1:
         attack += ATTACK_TABLE.single;
-        isB2BClear = false;
+        if (options.spinbonuses === "all-mini" && immobile) b2bCount++;
+        else b2bCount = 0;
         break;
       case 2:
         attack += ATTACK_TABLE.double;
-        isB2BClear = false;
+        if (options.spinbonuses === "all-mini" && immobile) b2bCount++;
+        else b2bCount = 0;
         break;
       case 3:
         attack += ATTACK_TABLE.triple;
-        isB2BClear = false;
+        if (options.spinbonuses === "all-mini" && immobile) b2bCount++;
+        else b2bCount = 0;
         break;
       case 4:
         attack += ATTACK_TABLE.quad;
-        isB2BClear = true;
+        b2bCount++;
         break;
     }
   }
 
-  if (options.spinbonuses === "all-mini" && immobile) {
-    isB2BClear = true;
-  }
-
-  if (b2b && isB2BClear) {
+  if (b2bCount > 1) {
     attack += ATTACK_TABLE.b2b;
   }
 
-  return { b2b: isB2BClear, attack, combo: newCombo };
+  return { b2b: b2bCount, attack, combo: newCombo };
 };
 
 export const addGarbage = (state: GameState, garbage: GarbageQueued) => {

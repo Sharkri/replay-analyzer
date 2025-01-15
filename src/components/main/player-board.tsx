@@ -21,7 +21,7 @@ export const PlayerBoard = ({
           2
         )}
       </div>
-
+      b2b: {gameState.b2b}
       <BoardCanvas gameState={gameState} />
     </div>
   );

@@ -21,7 +21,7 @@ export type GameState = {
   canHold: boolean;
   garbageQueued: GarbageQueued[];
   combo: number;
-  b2b: boolean;
+  b2b: number;
   attackQueued: AttackQueued[];
   piecesPlaced: number;
   rng: number;

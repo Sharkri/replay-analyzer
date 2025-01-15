@@ -33,7 +33,7 @@ export const createGameState = (bags: number, seed: number): GameState => {
     dead: false,
     canHold: true,
     garbageQueued: [],
-    b2b: false,
+    b2b: 0,
     combo: 0,
     attackQueued: [],
     piecesPlaced: 0,
