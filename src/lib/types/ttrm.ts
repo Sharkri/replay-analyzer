@@ -127,6 +127,9 @@ export const optionsSchema = z.object({
     "stupid",
     "none",
   ]),
+  b2bcharging: z.boolean().default(false),
+  b2bcharge_base: z.number().default(0),
+  garbagecap: z.number().default(8),
 });
 
 export const roundReplaySchema = z.object({

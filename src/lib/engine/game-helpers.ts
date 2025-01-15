@@ -1,4 +1,4 @@
-import { BoardRow, GameState, GarbageQueued } from "../types/game-state";
+import { BoardRow, GameState } from "../types/game-state";
 import { GameOptions } from "../types/ttrm";
 import { ATTACK_TABLE } from "./game-options";
 import { nextFloat } from "./rng";
@@ -56,16 +56,41 @@ export const calculateAttack = (
   return { b2b: b2bCount, attack, combo: newCombo };
 };
 
-export const addGarbage = (state: GameState, garbage: GarbageQueued) => {
-  const { float, nextSeed } = nextFloat(state.rngex);
-  const column = Math.floor(float * 10);
-  state.rngex = nextSeed;
+export const processGarbageQueued = (
+  state: GameState,
+  options: GameOptions,
+  frame: number
+) => {
+  const { garbagecap, garbagespeed } = options;
 
-  for (let i = 0; i < garbage.amt; i++) {
-    const line: BoardRow = Array.from({ length: 10 }, () => "G");
-    line[column] = null;
-    state.board.unshift(line);
+  let garbageSum = 0;
+  for (const garbage of state.garbageQueued) {
+    const active = frame - garbage.frame > garbagespeed;
+    if (!active) continue;
+
+    const { float, nextSeed } = nextFloat(state.rngex);
+    const column = Math.floor(float * 10);
+    state.rngex = nextSeed;
+
+    while (garbageSum < garbagecap && garbage.amt--) {
+      let line = generateGarbage(column);
+      state.board.unshift(line);
+
+      garbageSum++;
+    }
+
+    if (garbageSum >= garbagecap) break;
   }
+
+  state.garbageQueued = state.garbageQueued.filter(
+    (garbage) => garbage.amt > 0
+  );
+};
+
+export const generateGarbage = (emptyIndex: number) => {
+  const line: BoardRow = Array.from({ length: 10 }, () => "G");
+  line[emptyIndex] = null;
+  return line;
 };
 
 /**

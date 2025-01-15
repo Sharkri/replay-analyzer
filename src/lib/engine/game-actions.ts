@@ -1,6 +1,10 @@
 import { GameState, Rotation } from "../types/game-state";
 import { GameOptions } from "../types/ttrm";
-import { addGarbage, calculateAttack, cancelGarbage } from "./game-helpers";
+import {
+  processGarbageQueued,
+  calculateAttack,
+  cancelGarbage,
+} from "./game-helpers";
 import {
   checkCollision,
   checkImmobile,
@@ -113,15 +117,7 @@ export const hardDrop = (
 
   cancelGarbage(state, options);
 
-  if (clearedLines == 0) {
-    state.garbageQueued = state.garbageQueued.filter((garbage) => {
-      const diff = frame - garbage.frame;
-      if (diff <= options.garbagespeed) return true;
-
-      addGarbage(state, garbage);
-      return false;
-    });
-  }
+  if (clearedLines == 0) processGarbageQueued(state, options, frame);
 
   const nextPiece = state.queue.shift();
   if (!nextPiece) throw new Error("Queue is empty");
