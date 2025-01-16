@@ -44,7 +44,9 @@ export const useRoundState = (round: Round[]) => {
           break;
         case "keydown":
           commands.push(...getHeldKeyCommands(event, heldKeys, handling));
-          commands.push(processKeyDown(event, newHeldKeys));
+          const data = processKeyDown(event, newHeldKeys);
+          newHeldKeys = data.heldKeys;
+          commands.push(data.key);
           break;
         case "keyup":
           handleKeyUp(event, newHeldKeys);

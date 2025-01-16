@@ -25,7 +25,7 @@ export const processKeyDown = (event: KeyEvent, heldKeys: HeldKeys) => {
   if (isHeldKey(data.key)) heldKeys[data.key] = { frame: currFrame, order: 0 };
 
   console.log(`Key pressed: ${data.key} at frame ${frame}`);
-  return data.key;
+  return { key: data.key, heldKeys };
 };
 
 export const handleKeyUp = (event: KeyEvent, heldKeys: HeldKeys) => {
@@ -39,29 +39,35 @@ export const getHeldKeyCommands = (
   heldKeys: HeldKeys,
   handling: Handling
 ) => {
-  const { das, arr } = handling;
+  const { das, arr, may20g } = handling;
   const currentFrame = event.frame + event.data.subframe;
   const commands: Command[] = [];
 
-  // order doesnt seem to do anything but idk
   const keys = Object.entries(heldKeys).sort(([, a], [, b]) =>
     a && b ? b.order - a.order : 0
   );
 
-  keys.forEach(([key, pressTime]) => {
-    if (pressTime == null) return;
+  const is20G = heldKeys.softDrop != null && may20g;
 
+  for (const [key, data] of keys) {
+    if (data == null) continue;
     if (key === "softDrop") {
       commands.push(key);
-    } else if (key === "moveLeft" || key === "moveRight") {
-      const framesHeld = currentFrame - pressTime.frame;
-      if (framesHeld >= das) {
-        const arrFrames = framesHeld - das;
-        if (arr === 0 || arrFrames % arr === 0)
-          commands.push(key === "moveLeft" ? "dasLeft" : "dasRight");
-      }
+      continue;
     }
-  });
+
+    const framesHeld = currentFrame - data.frame;
+    const arrFrames = framesHeld - das;
+    const canDas = framesHeld >= das && (arr === 0 || arrFrames % arr === 0);
+    if (!canDas) continue;
+
+    if (is20G) {
+      // Soft drop precedent over any movement. Manual das really inefficient lol
+      for (let i = 0; i < 9; i++) commands.push("softDrop", key as Command);
+    } else {
+      commands.push(key === "moveLeft" ? "dasLeft" : "dasRight");
+    }
+  }
 
   return commands;
 };
