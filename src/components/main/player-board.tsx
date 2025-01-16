@@ -12,7 +12,7 @@ export const PlayerBoard = ({
   return (
     <div>
       {player.username}
-      <div className="">
+      {/* <div className="overflow-scroll max-w-14 whitespace-nowrap">
         {JSON.stringify(
           {
             garbage: gameState.garbageQueued,
@@ -20,7 +20,7 @@ export const PlayerBoard = ({
           null,
           2
         )}
-      </div>
+      </div> */}
       b2b: {gameState.b2b}
       <BoardCanvas gameState={gameState} />
     </div>

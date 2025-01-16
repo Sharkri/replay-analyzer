@@ -96,6 +96,7 @@ export const useRoundState = (round: Round[]) => {
       ) {
         evt.commands.unshift("drop");
       }
+
       newState = executeCommands(evt.commands, newState, event.frame, options);
       heldKeys = evt.newHeldKeys;
     }

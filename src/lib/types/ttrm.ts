@@ -15,6 +15,7 @@ const keyEnum = z.enum([
 const keyDataSchema = z.object({
   key: keyEnum,
   subframe: z.number(),
+  hoisted: z.boolean().default(false),
 });
 
 const keyEvent = z.object({

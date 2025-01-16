@@ -1,7 +1,7 @@
 import { Handling, IGEEvent, KeyEvent } from "@/lib/types/ttrm";
 import { Command } from "@/lib/engine/game";
 
-export type HeldKey = { frame: number; order: number } | null;
+export type HeldKey = { frame: number; order: number; hoisted: boolean } | null;
 export type HeldKeys = Record<"moveLeft" | "moveRight" | "softDrop", HeldKey>;
 
 const isHeldKey = (key: string): key is keyof HeldKeys => {
@@ -12,17 +12,20 @@ export const processKeyDown = (event: KeyEvent, heldKeys: HeldKeys) => {
   const { frame, data } = event;
   const currFrame = frame + data.subframe;
 
+  // Cancel das if other direction is pressed
   if (data.key === "moveLeft" && heldKeys.moveRight) {
-    heldKeys.moveRight = { frame: currFrame, order: 0 };
+    heldKeys.moveRight = { frame: currFrame, order: 0, hoisted: false };
   } else if (data.key === "moveRight" && heldKeys.moveLeft) {
-    heldKeys.moveLeft = { frame: currFrame, order: 0 };
+    heldKeys.moveLeft = { frame: currFrame, order: 0, hoisted: false };
   }
 
   (Object.keys(heldKeys) as (keyof HeldKeys)[]).forEach((key) => {
     if (heldKeys[key]) heldKeys[key].order += 1;
   });
 
-  if (isHeldKey(data.key)) heldKeys[data.key] = { frame: currFrame, order: 0 };
+  if (isHeldKey(data.key)) {
+    heldKeys[data.key] = { frame: currFrame, order: 0, hoisted: data.hoisted };
+  }
 
   console.log(`Key pressed: ${data.key} at frame ${frame}`);
   return { key: data.key, heldKeys };
@@ -31,7 +34,7 @@ export const processKeyDown = (event: KeyEvent, heldKeys: HeldKeys) => {
 export const handleKeyUp = (event: KeyEvent, heldKeys: HeldKeys) => {
   const { data } = event;
   if (isHeldKey(data.key)) heldKeys[data.key] = null;
-  console.log(`Key released: ${data.key}`);
+  console.log(`Key released: ${data.key} ${event.frame}`);
 };
 
 export const getHeldKeyCommands = (
@@ -59,7 +62,8 @@ export const getHeldKeyCommands = (
     const framesHeld = currentFrame - data.frame;
     const arrFrames = framesHeld - das;
     const canDas = framesHeld >= das && (arr === 0 || arrFrames % arr === 0);
-    if (!canDas) continue;
+
+    if (!canDas && !data.hoisted) continue;
 
     if (is20G) {
       // Soft drop precedent over any movement. Manual das really inefficient lol
