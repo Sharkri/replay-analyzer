@@ -33,4 +33,5 @@ export type PieceData = {
   x: number;
   y: number;
   rotation: Rotation;
+  spawnFrame: number;
 };

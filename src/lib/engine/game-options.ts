@@ -1,8 +1,8 @@
-export const BLOCK_SIZE = 40;
+export const BLOCK_SIZE = 20;
 export const BOARD_WIDTH = 10;
 export const BOARD_HEIGHT = 20;
 export const X_OFFSET = 160;
-export const Y_OFFSET = 120;
+export const Y_OFFSET = 320;
 
 export const ATTACK_TABLE = {
   single: 0,
@@ -16,4 +16,4 @@ export const ATTACK_TABLE = {
   b2b: 1,
 };
 
-export const PIECE_SPAWN = 21;
+export const PIECE_SPAWN = 22;

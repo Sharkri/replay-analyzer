@@ -130,6 +130,9 @@ export const optionsSchema = z.object({
   b2bcharging: z.boolean().default(false),
   b2bcharge_base: z.number().default(0),
   garbagecap: z.number().default(8),
+  g: z.number().default(0.02),
+  gincrease: z.number().default(0.002),
+  gmargin: z.number().default(3600),
 });
 
 export const roundReplaySchema = z.object({

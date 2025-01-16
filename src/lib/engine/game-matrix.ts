@@ -77,13 +77,14 @@ export const tryWallKicks = (
   return { pieceData: newPieceData, success: false };
 };
 
-export const spawnPiece = (board: Board, piece: Piece) => {
+export const spawnPiece = (board: Board, piece: Piece, frame: number) => {
   const matrix = piece == "I" ? 4 : piece == "O" ? 2 : 3;
   const piece_data = {
     piece,
     x: 5 - Math.ceil(matrix / 2.0),
     y: PIECE_SPAWN,
     rotation: 0 as Rotation,
+    spawnFrame: frame,
   };
   const collides = board.length > 16 && checkCollision(board, piece_data);
 

@@ -2,6 +2,7 @@ import { Board, GameState } from "../types/game-state";
 import { GameCommand, GameOptions } from "../types/ttrm";
 import { spawnPiece } from "./game-matrix";
 import {
+  drop,
   hardDrop,
   hold,
   moveLeft,
@@ -13,7 +14,7 @@ import {
 } from "./game-actions";
 import { getNextBag, getRngSeed } from "./rng";
 
-export type Command = GameCommand | "dasLeft" | "dasRight";
+export type Command = GameCommand | "dasLeft" | "dasRight" | "drop";
 
 export const createGameState = (bags: number, seed: number): GameState => {
   const board: Board = [];
@@ -24,7 +25,7 @@ export const createGameState = (bags: number, seed: number): GameState => {
 
   const gameQueue = [...bag.queue];
 
-  const current = spawnPiece(board, gameQueue.shift() || "I");
+  const current = spawnPiece(board, gameQueue.shift() || "I", 0);
 
   return {
     queue: gameQueue,
@@ -70,8 +71,11 @@ export const executeCommand = (
       // TODO: soft drop should not always be max
       softDrop(newGameState);
       break;
+    case "drop":
+      drop(newGameState);
+      break;
     case "hold":
-      hold(newGameState);
+      hold(newGameState, frame);
       break;
     case "rotate180":
       rotate180(newGameState);

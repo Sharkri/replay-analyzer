@@ -61,6 +61,15 @@ export const softDrop = (state: GameState) => {
   }
   state.current.y += 1;
 };
+export const drop = (state: GameState) => {
+  if (state.dead) console.error("Cannot act when dead");
+
+  state.current.y -= 1;
+
+  if (checkCollision(state.board, state.current)) {
+    state.current.y += 1;
+  }
+};
 
 export const sonicDrop = (state: GameState) => {
   if (state.dead) console.error("Cannot act when dead");
@@ -71,13 +80,13 @@ export const sonicDrop = (state: GameState) => {
   state.current.y += 1;
 };
 
-export const hold = (state: GameState) => {
+export const hold = (state: GameState, frame: number) => {
   if (state.dead) console.error("Cannot act when dead");
   if (!state.canHold) return;
 
   let { collides, piece_data } = state.held
-    ? spawnPiece(state.board, state.held)
-    : spawnPiece(state.board, state.queue.shift()!);
+    ? spawnPiece(state.board, state.held, frame + 1)
+    : spawnPiece(state.board, state.queue.shift()!, frame + 1);
 
   // Swap current and held
   state.held = state.current.piece;
@@ -121,7 +130,11 @@ export const hardDrop = (
 
   const nextPiece = state.queue.shift();
   if (!nextPiece) throw new Error("Queue is empty");
-  const { collides, piece_data } = spawnPiece(state.board, nextPiece);
+  const { collides, piece_data } = spawnPiece(
+    state.board,
+    nextPiece,
+    frame + 1
+  );
   state.dead = collides;
   state.current = piece_data;
 

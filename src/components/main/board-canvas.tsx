@@ -49,7 +49,13 @@ const BoardCanvas = ({ gameState }: { gameState: GameState }) => {
 
       {gameState.held && (
         <BoardPiece
-          pieceData={{ x: -4, y: 20, rotation: 0, piece: gameState.held }}
+          pieceData={{
+            x: -4,
+            y: 20,
+            rotation: 0,
+            piece: gameState.held,
+            spawnFrame: 0,
+          }}
         />
       )}
       <BoardQueue queue={gameState.queue.slice(0, 5)} />

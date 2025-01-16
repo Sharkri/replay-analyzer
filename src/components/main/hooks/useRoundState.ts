@@ -9,6 +9,7 @@ import {
   handleIGEEvent,
 } from "@/lib/engine/event-replay";
 import { GameState } from "@/lib/types/game-state";
+import { PIECE_SPAWN } from "@/lib/engine/game-options";
 
 type PlayerState = {
   heldKeys: HeldKeys;
@@ -67,7 +68,7 @@ export const useRoundState = (round: Round[]) => {
     []
   );
 
-  const processEventsToFrame = (
+  const processEvents = (
     player: PlayerState,
     round: Round,
     targetFrame: number
@@ -84,10 +85,17 @@ export const useRoundState = (round: Round[]) => {
       if (event.frame > targetFrame) {
         break;
       }
+
       // process events and apply changes
       const evt = processEvent(event, heldKeys, options.handling);
       if (evt.garbage) newState.garbageQueued.push(evt.garbage);
-
+      // initial tick of gravity
+      if (
+        event.frame > newState.current.spawnFrame &&
+        newState.current.y === PIECE_SPAWN
+      ) {
+        evt.commands.unshift("drop");
+      }
       newState = executeCommands(evt.commands, newState, event.frame, options);
       heldKeys = evt.newHeldKeys;
     }
@@ -117,12 +125,12 @@ export const useRoundState = (round: Round[]) => {
         // Process all players up to the target frame
         return prevStates.map((state, idx) => {
           const targetFrame = nextFrame + frameIncrement;
-          const newState = processEventsToFrame(state, round[idx], targetFrame);
+          const newState = processEvents(state, round[idx], targetFrame);
           return newState;
         });
       });
     },
-    [round, processEventsToFrame]
+    [round, processEvents]
   );
 
   return { playerStates, handleNextFrame };

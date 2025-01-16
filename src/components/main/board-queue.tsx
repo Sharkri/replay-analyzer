@@ -11,6 +11,7 @@ export const BoardQueue = ({ queue }: { queue: Piece[] }) => {
         y: PIECE_SPAWN - index * 3,
         piece,
         rotation: 0,
+        spawnFrame: 0,
       }}
     />
   ));
