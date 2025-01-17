@@ -53,6 +53,12 @@ export const calculateAttack = (
     attack += ATTACK_TABLE.b2b;
   }
 
+  const surgeBreak =
+    options.b2bcharging && b2b > options.b2bcharge_base && b2bCount === 0;
+  if (surgeBreak) {
+    attack += b2b;
+  }
+
   return { b2b: b2bCount, attack, combo: newCombo };
 };
 
