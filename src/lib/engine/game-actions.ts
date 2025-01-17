@@ -13,6 +13,7 @@ import {
   spawnPiece,
   tryWallKicks,
 } from "./game-matrix";
+import { getNextBag } from "./rng";
 
 export const moveLeft = (state: GameState) => {
   if (state.dead) console.error("Cannot act when dead");
@@ -128,8 +129,13 @@ export const hardDrop = (
 
   if (clearedLines == 0) processGarbageQueued(state, options, frame);
 
-  const nextPiece = state.queue.shift();
-  if (!nextPiece) throw new Error("Queue is empty");
+  if (state.queue.length < 7) {
+    const bag = getNextBag(state.rng, 5);
+    state.queue.push(...bag.queue);
+    state.rng = bag.nextSeed;
+  }
+
+  const nextPiece = state.queue.shift()!;
   const { collides, piece_data } = spawnPiece(
     state.board,
     nextPiece,

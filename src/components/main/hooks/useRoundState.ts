@@ -22,7 +22,7 @@ export const useRoundState = (round: Round[]) => {
     round.map((player) => {
       const { seed } = player.replay.options;
 
-      const gameState = createGameState(10, seed);
+      const gameState = createGameState(1, seed);
       const heldKeys = {
         moveLeft: null,
         moveRight: null,
