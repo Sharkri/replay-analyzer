@@ -14,6 +14,7 @@ import { PIECE_SPAWN } from "@/lib/engine/game-options";
 type PlayerState = {
   heldKeys: HeldKeys;
   eventIndex: number;
+  currFrame: number;
   gameState: GameState;
 };
 
@@ -29,7 +30,7 @@ export const useRoundState = (round: Round[]) => {
         softDrop: null,
       } as HeldKeys;
 
-      return { heldKeys, eventIndex: 0, gameState };
+      return { heldKeys, eventIndex: 0, currFrame: 0, gameState };
     })
   );
 
@@ -68,70 +69,64 @@ export const useRoundState = (round: Round[]) => {
     []
   );
 
-  const processEvents = (
+  const processNextFrame = (
     player: PlayerState,
     round: Round,
-    targetFrame: number
+    frameIncrement: number
   ) => {
-    let { eventIndex, gameState, heldKeys } = player;
-    const { events, options } = round.replay;
+    const p = structuredClone(player);
+    const { events, options, frames } = round.replay;
 
-    let newState = structuredClone(gameState);
+    const targetFrame = p.currFrame + frameIncrement;
+    if (targetFrame > frames) {
+      return player;
+    }
 
-    let i = eventIndex;
-    for (; i < events.length; i++) {
-      const event = events[i];
-      // if target frame is reached, exit
-      if (event.frame > targetFrame) {
+    while (p.currFrame < targetFrame) {
+      const commands: Command[] = [];
+      const event = events[p.eventIndex];
+      if (event == null) {
         break;
       }
 
-      // process events and apply changes
-      const evt = processEvent(event, heldKeys, options.handling);
-      if (evt.garbage) newState.garbageQueued.push(evt.garbage);
-      // initial tick of gravity
-      if (
-        event.frame > newState.current.spawnFrame &&
-        newState.current.y === PIECE_SPAWN
-      ) {
-        evt.commands.unshift("drop");
+      const { y, spawnFrame } = p.gameState.current;
+
+      const isInitialY = y === PIECE_SPAWN; // initial tick of gravity
+      if (event.frame > spawnFrame && isInitialY) commands.push("drop");
+
+      if (event.frame === p.currFrame) {
+        const res = processEvent(event, p.heldKeys, options.handling);
+        commands.push(...res.commands);
+        if (res.garbage) p.gameState.garbageQueued.push(res.garbage);
+        p.heldKeys = res.newHeldKeys;
+        p.eventIndex++;
+      } else {
+        p.currFrame++;
       }
 
-      newState = executeCommands(evt.commands, newState, event.frame, options);
-      heldKeys = evt.newHeldKeys;
+      if (commands.length > 0) {
+        p.gameState = executeCommands(
+          commands,
+          p.gameState,
+          event.frame,
+          options
+        );
+      }
     }
 
-    return {
-      ...player,
-      eventIndex: i,
-      gameState: newState,
-      heldKeys,
-    };
+    return p;
   };
 
   const handleNextFrame = useCallback(
     (frameIncrement: number) => {
       setPlayerStates((prevStates) => {
-        // Calculate the min next frame across all players
-        const nextFrame = Math.min(
-          ...prevStates.map((state, idx) => {
-            const { eventIndex } = state;
-            const { replay } = round[idx];
-            const event = replay.events[eventIndex];
-            return event ? event.frame : Infinity;
-          })
-        );
-        if (nextFrame === Infinity) return prevStates;
-
-        // Process all players up to the target frame
         return prevStates.map((state, idx) => {
-          const targetFrame = nextFrame + frameIncrement;
-          const newState = processEvents(state, round[idx], targetFrame);
+          const newState = processNextFrame(state, round[idx], frameIncrement);
           return newState;
         });
       });
     },
-    [round, processEvents]
+    [round, processNextFrame]
   );
 
   return { playerStates, handleNextFrame };
