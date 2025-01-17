@@ -27,14 +27,12 @@ export const processKeyDown = (event: KeyEvent, heldKeys: HeldKeys) => {
     heldKeys[data.key] = { frame: currFrame, order: 0, hoisted: data.hoisted };
   }
 
-  console.log(`Key pressed: ${data.key} at frame ${frame}`);
   return { key: data.key, heldKeys };
 };
 
 export const handleKeyUp = (event: KeyEvent, heldKeys: HeldKeys) => {
   const { data } = event;
   if (isHeldKey(data.key)) heldKeys[data.key] = null;
-  console.log(`Key released: ${data.key} ${event.frame}`);
 };
 
 export const getHeldKeyCommands = (
@@ -77,8 +75,6 @@ export const getHeldKeyCommands = (
 };
 
 export const handleIGEEvent = (event: IGEEvent) => {
-  console.log(`Processing IGE event:`, event);
-
   const { data } = event;
   switch (data.type) {
     case "custom":

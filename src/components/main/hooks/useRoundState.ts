@@ -33,6 +33,7 @@ export const useRoundState = (round: Round[]) => {
       return { heldKeys, eventIndex: 0, currFrame: 0, gameState };
     })
   );
+  const [roundEnded, setRoundEnded] = useState(false);
 
   const processEvent = useCallback(
     (event: ReplayEvent, heldKeys: HeldKeys, handling: Handling) => {
@@ -74,20 +75,22 @@ export const useRoundState = (round: Round[]) => {
     round: Round,
     frameIncrement: number
   ) => {
-    const p = structuredClone(player);
-    const { events, options, frames } = round.replay;
-
-    const targetFrame = p.currFrame + frameIncrement;
-    if (targetFrame > frames) {
+    if (roundEnded) {
       return player;
     }
+    const p = structuredClone(player);
+    const { events, options } = round.replay;
+
+    const targetFrame = p.currFrame + frameIncrement;
 
     while (p.currFrame < targetFrame) {
-      const commands: Command[] = [];
       const event = events[p.eventIndex];
       if (event == null) {
+        setRoundEnded(true);
         break;
       }
+
+      const commands: Command[] = [];
 
       const { y, spawnFrame } = p.gameState.current;
 
@@ -129,5 +132,5 @@ export const useRoundState = (round: Round[]) => {
     [round, processNextFrame]
   );
 
-  return { playerStates, handleNextFrame };
+  return { playerStates, handleNextFrame, roundEnded };
 };

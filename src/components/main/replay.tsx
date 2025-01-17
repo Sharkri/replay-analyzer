@@ -5,20 +5,30 @@ import { GameRound } from "./round";
 
 export const GameReplay = ({ replay }: { replay: Replay }) => {
   const [roundIndex, setRoundIndex] = useState(0);
+  const [playing, setPlaying] = useState(false);
+
   const round = replay.rounds[roundIndex];
+
+  const handleNextRound = () => {
+    setRoundIndex((prevIndex) => {
+      const nextIndex = prevIndex + 1;
+      if (nextIndex >= replay.rounds.length) return prevIndex;
+      return nextIndex;
+    });
+  };
 
   return (
     <div>
-      <Button
-        onClick={() => {
-          setRoundIndex((prev) => prev + 1);
-        }}
-      >
-        Next Round
-      </Button>
+      <Button onClick={handleNextRound}>Next Round</Button>
 
       <div className="flex flex-wrap">
-        <GameRound round={round} key={roundIndex} />
+        <GameRound
+          round={round}
+          key={roundIndex}
+          onNextRound={handleNextRound}
+          onPlayingChange={(bool) => setPlaying(bool)}
+          playing={playing}
+        />
       </div>
     </div>
   );
