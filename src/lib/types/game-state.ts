@@ -26,6 +26,7 @@ export type GameState = {
   piecesPlaced: number;
   rng: number;
   rngex: number;
+  lastcolumn: null | number;
 };
 
 export type PieceData = {

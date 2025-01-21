@@ -40,6 +40,7 @@ export const createGameState = (bags: number, seed: number): GameState => {
     piecesPlaced: 0,
     rng,
     rngex: getRngSeed(seed),
+    lastcolumn: null,
   };
 };
 

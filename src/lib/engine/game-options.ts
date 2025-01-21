@@ -15,5 +15,13 @@ export const ATTACK_TABLE = {
   pc: 10,
   b2b: 1,
 };
+export const COMBO_TABLE = {
+  none: [0],
+  multiplier: [0, 1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4],
+};
+
+export const COMBO_MINIFIER = 1;
+export const COMBO_MINIFIER_LOG = 1.25;
+export const COMBO_BONUS = 0.25;
 
 export const PIECE_SPAWN = 22;

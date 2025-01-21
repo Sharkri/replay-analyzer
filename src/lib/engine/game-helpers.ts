@@ -1,7 +1,12 @@
 import { BoardRow, GameState } from "../types/game-state";
 import { GameOptions } from "../types/ttrm";
-import { ATTACK_TABLE } from "./game-options";
-import { nextFloat } from "./rng";
+import {
+  ATTACK_TABLE,
+  COMBO_BONUS,
+  COMBO_MINIFIER,
+  COMBO_MINIFIER_LOG,
+} from "./game-options";
+import { next, nextFloat } from "./rng";
 
 export const calculateAttack = (
   state: GameState,
@@ -15,42 +20,54 @@ export const calculateAttack = (
     return { b2b, attack: 0, combo: 0 };
   }
 
+  const attackTable = { ...ATTACK_TABLE, pc: options.allclear_garbage };
+
   let attack = 0;
   let b2bCount = b2b;
   let newCombo = combo + 1;
 
   if (immobile && current.piece === "T") {
     // TODO: tsm is detected as tss
-    if (clearedLines === 1) attack += ATTACK_TABLE.tss;
-    else if (clearedLines === 2) attack += ATTACK_TABLE.tsd;
-    else if (clearedLines === 3) attack += ATTACK_TABLE.tst;
+    if (clearedLines === 1) attack += attackTable.tss;
+    else if (clearedLines === 2) attack += attackTable.tsd;
+    else if (clearedLines === 3) attack += attackTable.tst;
     b2bCount++;
   } else {
     switch (clearedLines) {
       case 1:
-        attack += ATTACK_TABLE.single;
-        if (options.spinbonuses === "all-mini" && immobile) b2bCount++;
+        attack += attackTable.single;
+        if (options.spinbonuses.includes("all-mini") && immobile) b2bCount++;
         else b2bCount = 0;
         break;
       case 2:
-        attack += ATTACK_TABLE.double;
-        if (options.spinbonuses === "all-mini" && immobile) b2bCount++;
+        attack += attackTable.double;
+        if (options.spinbonuses.includes("all-mini") && immobile) b2bCount++;
         else b2bCount = 0;
         break;
       case 3:
-        attack += ATTACK_TABLE.triple;
-        if (options.spinbonuses === "all-mini" && immobile) b2bCount++;
+        attack += attackTable.triple;
+        if (options.spinbonuses.includes("all-mini") && immobile) b2bCount++;
         else b2bCount = 0;
         break;
       case 4:
-        attack += ATTACK_TABLE.quad;
+        attack += attackTable.quad;
         b2bCount++;
         break;
     }
   }
 
   if (b2bCount > 1) {
-    attack += ATTACK_TABLE.b2b;
+    attack += attackTable.b2b;
+  }
+
+  if (options.combotable === "multiplier") {
+    attack *= 1 + COMBO_BONUS * (newCombo - 1);
+    if (newCombo > 2) {
+      attack = Math.max(
+        Math.log(COMBO_MINIFIER * (newCombo - 1) * COMBO_MINIFIER_LOG + 1),
+        attack
+      );
+    }
   }
 
   const surgeBreak =
@@ -58,6 +75,9 @@ export const calculateAttack = (
   if (surgeBreak) {
     attack += b2b;
   }
+
+  // round down
+  attack = Math.floor(attack);
 
   return { b2b: b2bCount, attack, combo: newCombo };
 };
@@ -70,19 +90,33 @@ export const processGarbageQueued = (
   const { garbagecap, garbagespeed } = options;
 
   let garbageSum = 0;
+
   for (const garbage of state.garbageQueued) {
     const active = frame - garbage.frame > garbagespeed;
     if (!active) continue;
 
-    const { float, nextSeed } = nextFloat(state.rngex);
-    const column = Math.floor(float * 10);
-    state.rngex = nextSeed;
-
     while (garbageSum < garbagecap && garbage.amt--) {
+      let column = state.lastcolumn;
+
+      if (column == null || (state.rngex = next(state.rngex)) < 0) {
+        const { float, nextSeed } = nextFloat(state.rngex);
+        state.lastcolumn = Math.floor(float * 10);
+        column = state.lastcolumn;
+        state.rngex = nextSeed;
+      }
+
       let line = generateGarbage(column);
       state.board.unshift(line);
 
       garbageSum++;
+    }
+
+    if (garbage.amt <= 0) {
+      state.rngex = next(state.rngex);
+
+      const { float, nextSeed } = nextFloat(state.rngex);
+      state.lastcolumn = Math.floor(float * 10);
+      state.rngex = nextSeed;
     }
 
     if (garbageSum >= garbagecap) break;

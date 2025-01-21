@@ -127,6 +127,7 @@ export const optionsSchema = z.object({
     "handheld",
     "stupid",
     "none",
+    "all-mini+",
   ]),
   b2bcharging: z.boolean().default(false),
   b2bcharge_base: z.number().default(0),
@@ -134,6 +135,9 @@ export const optionsSchema = z.object({
   g: z.number().default(0.02),
   gincrease: z.number().default(0.002),
   gmargin: z.number().default(3600),
+  allclear_b2b: z.number().default(0),
+  allclear_garbage: z.number().default(10),
+  combotable: z.enum(["multiplier", "none"]).default("multiplier"),
 });
 
 export const roundReplaySchema = z.object({
