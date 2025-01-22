@@ -16,7 +16,7 @@ export const calculateAttack = (
 ) => {
   const { b2b, combo, current } = state;
 
-  if (clearedLines == 0) {
+  if (clearedLines === 0) {
     return { b2b, attack: 0, combo: 0 };
   }
 
@@ -71,9 +71,10 @@ export const calculateAttack = (
   }
 
   const surgeBreak =
-    options.b2bcharging && b2b > options.b2bcharge_base && b2bCount === 0;
+    options.b2bcharging && b2b - 1 > options.b2bcharge_base && b2bCount === 0;
   if (surgeBreak) {
-    attack += b2b;
+    console.log("Broke surge b2b: ", b2b);
+    attack += b2b - 1;
   }
 
   // round down
