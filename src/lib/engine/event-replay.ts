@@ -1,5 +1,7 @@
 import { Handling, IGEEvent, KeyEvent } from "@/lib/types/ttrm";
 import { Command } from "@/lib/engine/game";
+import { GameState } from "../types/game-state";
+import { refreshGarbages } from "./game-helpers";
 
 export type HeldKey = { frame: number; order: number; hoisted: boolean } | null;
 export type HeldKeys = Record<"moveLeft" | "moveRight" | "softDrop", HeldKey>;
@@ -74,18 +76,31 @@ export const getHeldKeyCommands = (
   return commands;
 };
 
-export const handleIGEEvent = (event: IGEEvent) => {
+export const handleIGEEvent = (event: IGEEvent, state: GameState) => {
   const { data } = event;
   switch (data.type) {
     case "custom":
       break;
     case "interaction":
+      if (data.data.type === "garbage") {
+        const { amt, frame, ackiid, cid } = data.data;
+
+        const garbage = { amt, cancelFrame: frame, frame: null, ackiid, cid };
+        garbage.amt = refreshGarbages(garbage, state);
+
+        if (garbage.amt > 0) {
+          state.garbageQueued.push(garbage);
+        }
+      }
       break;
     case "interaction_confirm":
       if (data.data.type === "garbage") {
-        const { amt, frame } = data.data;
+        const { cid } = data.data;
 
-        return { amt, cancelFrame: frame, frame: event.frame };
+        const cidIndex = state.garbageQueued.findIndex((a) => a.cid === cid);
+        if (cidIndex !== -1) {
+          state.garbageQueued[cidIndex].frame = event.frame;
+        }
       }
       break;
 
@@ -101,6 +116,4 @@ export const handleIGEEvent = (event: IGEEvent) => {
     default:
       console.log("Unknown event:", event);
   }
-
-  return null;
 };

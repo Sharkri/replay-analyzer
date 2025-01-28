@@ -8,9 +8,16 @@ export type Rotation = 0 | 1 | 2 | 3;
 export type GarbageQueued = {
   cancelFrame: number;
   amt: number;
-  frame: number;
+  frame: number | null;
+  ackiid: number;
+  cid: number;
 };
-export type AttackQueued = { amt: number; frame: number; doubled: boolean };
+export type AttackQueued = {
+  amt: number;
+  bonusAmt: number;
+  frame: number;
+  iid: number;
+};
 
 export type GameState = {
   queue: Piece[];
@@ -27,6 +34,7 @@ export type GameState = {
   rng: number;
   rngex: number;
   lastcolumn: null | number;
+  iid: number;
 };
 
 export type PieceData = {

@@ -1,4 +1,4 @@
-import { BoardRow, GameState } from "../types/game-state";
+import { BoardRow, GameState, GarbageQueued } from "../types/game-state";
 import { GameOptions } from "../types/ttrm";
 import {
   ATTACK_TABLE,
@@ -8,16 +8,33 @@ import {
 } from "./game-options";
 import { next, nextFloat } from "./rng";
 
+function splitAttack(amt: number) {
+  if (amt <= 0) return [];
+
+  // Base size for each part
+  const baseSize = Math.floor(amt / 3);
+  const remainder = amt % 3;
+
+  // Split into three parts
+  const part1 = baseSize + (remainder > 0 ? 1 : 0); // Add 1 if there's a remainder
+  const part2 = baseSize + (remainder > 1 ? 1 : 0); // Add 1 for the second remainder
+  const part3 = baseSize; // Smallest part is the last
+
+  // Return as an array
+  return [part1, part2, part3];
+}
+
 export const calculateAttack = (
   state: GameState,
   clearedLines: number,
+  isGarbageClear: boolean,
   immobile: boolean,
   options: GameOptions
 ) => {
   const { b2b, combo, current } = state;
 
   if (clearedLines === 0) {
-    return { b2b, attack: 0, combo: 0 };
+    return { b2b, attack: 0, combo: 0, surgeAttack: [] };
   }
 
   const attackTable = { ...ATTACK_TABLE, pc: options.allclear_garbage };
@@ -58,6 +75,7 @@ export const calculateAttack = (
 
   if (b2bCount > 1) {
     attack += attackTable.b2b;
+    if (options.garbagespecialbonus && isGarbageClear) attack += 1;
   }
 
   if (options.combotable === "multiplier") {
@@ -70,17 +88,18 @@ export const calculateAttack = (
     }
   }
 
+  let surgeAttack: number[] = [];
+
   const surgeBreak =
     options.b2bcharging && b2b - 1 > options.b2bcharge_base && b2bCount === 0;
   if (surgeBreak) {
-    console.log("Broke surge b2b: ", b2b);
-    attack += b2b - 1;
+    surgeAttack = splitAttack(b2b - 1);
   }
 
   // round down
   attack = Math.floor(attack);
 
-  return { b2b: b2bCount, attack, combo: newCombo };
+  return { b2b: b2bCount, attack, surgeAttack, combo: newCombo };
 };
 
 export const processGarbageQueued = (
@@ -93,7 +112,8 @@ export const processGarbageQueued = (
   let garbageSum = 0;
 
   for (const garbage of state.garbageQueued) {
-    const active = frame - garbage.frame > garbagespeed;
+    const active =
+      garbage.frame != null && frame - garbage.frame > garbagespeed;
     if (!active) continue;
 
     while (garbageSum < garbagecap && garbage.amt--) {
@@ -135,49 +155,78 @@ export const generateGarbage = (emptyIndex: number) => {
 };
 
 /**
- * Cancels garbageQueued using attackQueued.
+ * Fights garbage queued with attack
  * It modifies the gameState in place.
  * @param state The current state of the game.
  */
-export const cancelGarbage = (state: GameState, options: GameOptions) => {
-  let attackIndex = 0;
+export const fightLines = (
+  state: GameState,
+  attack: number,
+  bonusAmt: number,
+  frame: number,
+  options: GameOptions
+) => {
   let garbageIndex = 0;
 
   while (
-    attackIndex < state.attackQueued.length &&
+    (attack > 0 || bonusAmt > 0) &&
     garbageIndex < state.garbageQueued.length
   ) {
-    const attack = state.attackQueued[attackIndex];
     const garbage = state.garbageQueued[garbageIndex];
 
-    const frameDiff = garbage.cancelFrame - attack.frame;
+    const frameDiff = garbage.cancelFrame - frame;
     if (frameDiff > options.garbagespeed) {
-      attackIndex++;
+      garbageIndex++;
       continue;
     }
 
-    // Effective attack: double during opener phase, otherwise normal
-    const effectiveAttack = attack.doubled ? attack.amt * 2 : attack.amt;
+    // First use attack.amt to cancel garbage
+    const cancelFromAmt = Math.min(garbage.amt, attack);
 
-    if (effectiveAttack >= garbage.amt) {
-      const leftover = effectiveAttack - garbage.amt;
+    garbage.amt -= cancelFromAmt;
+    attack -= cancelFromAmt;
 
-      // halve leftover attack in opener phase to account for the x2
-      attack.amt = attack.doubled ? Math.floor(leftover / 2) : leftover;
-
-      state.garbageQueued.splice(garbageIndex, 1);
-
-      if (attack.amt === 0) attackIndex++;
-    } else {
-      // Partially cancel garbage with attack
-      const leftoverGarbage = garbage.amt - effectiveAttack;
-      garbage.amt = leftoverGarbage;
-
-      attack.amt = 0;
-      attackIndex++;
+    // If garbage still remains, use bonusAmt
+    if (garbage.amt > 0) {
+      const cancelFromBonus = Math.min(garbage.amt, bonusAmt);
+      garbage.amt -= cancelFromBonus;
+      bonusAmt -= cancelFromBonus;
     }
+
+    // Remove fully canceled garbage
+    if (garbage.amt === 0) state.garbageQueued.splice(garbageIndex, 1);
   }
 
-  // Remove fully used attacks
-  state.attackQueued = state.attackQueued.filter((a) => a.amt > 0);
+  if (attack > 0) {
+    return {
+      amt: attack,
+      bonusAmt: 0,
+      frame,
+      iid: ++state.iid,
+    };
+  }
+
+  return null;
+};
+
+export const refreshGarbages = (garbage: GarbageQueued, state: GameState) => {
+  let amt = garbage.amt;
+
+  if (state.attackQueued.length > 0) {
+    const list = [];
+
+    for (const attack of state.attackQueued) {
+      if (attack.iid <= garbage.ackiid) continue;
+
+      const minAmt = Math.min(attack.amt, amt);
+      attack.amt -= minAmt;
+      amt -= minAmt;
+
+      if (attack.amt > 0) list.push(attack);
+    }
+
+    state.attackQueued = list;
+  }
+
+  return amt;
 };

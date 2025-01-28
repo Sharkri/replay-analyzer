@@ -44,14 +44,21 @@ export const checkImmobile = (board: Board, pieceData: PieceData) => {
 
 export const clearLines = (board: Board) => {
   let clearedLines = 0;
+  let isGarbageClear = false;
+
   for (let i = board.length - 1; i >= 0; i--) {
-    const isFullRow = board[i].every((cell) => cell !== null);
+    const row = board[i];
+    const isFullRow = row.every((cell) => cell !== null);
+
     if (isFullRow) {
+      const garbageRow = row.some((cell) => cell === "G");
+      if (garbageRow) isGarbageClear = true;
+
       clearedLines += 1;
       board.splice(i, 1);
     }
   }
-  return clearedLines;
+  return { clearedLines, isGarbageClear };
 };
 
 export const tryWallKicks = (

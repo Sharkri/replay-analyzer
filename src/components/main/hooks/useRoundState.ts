@@ -36,7 +36,12 @@ export const useRoundState = (round: Round[]) => {
   const [roundEnded, setRoundEnded] = useState(false);
 
   const processEvent = useCallback(
-    (event: ReplayEvent, heldKeys: HeldKeys, handling: Handling) => {
+    (
+      event: ReplayEvent,
+      heldKeys: HeldKeys,
+      handling: Handling,
+      state: GameState
+    ) => {
       let newHeldKeys = structuredClone(heldKeys);
       const commands: Command[] = [];
       let garbage = null;
@@ -56,7 +61,7 @@ export const useRoundState = (round: Round[]) => {
           commands.push(...getHeldKeyCommands(event, heldKeys, handling));
           break;
         case "ige":
-          garbage = handleIGEEvent(event);
+          garbage = handleIGEEvent(event, state);
           break;
         case "end":
           console.log(`Game ended at frame ${event.frame}`);
@@ -98,9 +103,13 @@ export const useRoundState = (round: Round[]) => {
       if (event.frame > spawnFrame && isInitialY) commands.push("drop");
 
       if (event.frame === p.currFrame) {
-        const res = processEvent(event, p.heldKeys, options.handling);
+        const res = processEvent(
+          event,
+          p.heldKeys,
+          options.handling,
+          p.gameState
+        );
         commands.push(...res.commands);
-        if (res.garbage) p.gameState.garbageQueued.push(res.garbage);
         p.heldKeys = res.newHeldKeys;
         p.eventIndex++;
       } else {

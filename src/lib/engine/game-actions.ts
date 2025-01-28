@@ -3,7 +3,7 @@ import { GameOptions } from "../types/ttrm";
 import {
   processGarbageQueued,
   calculateAttack,
-  cancelGarbage,
+  fightLines,
 } from "./game-helpers";
 import {
   checkCollision,
@@ -109,23 +109,30 @@ export const hardDrop = (
   const immobile = checkImmobile(state.board, state.current);
 
   placePiece(state.board, state.current);
-  const clearedLines = clearLines(state.board);
+  const { clearedLines, isGarbageClear } = clearLines(state.board);
 
-  let { attack, b2b, combo } = calculateAttack(
+  let { attack, b2b, combo, surgeAttack } = calculateAttack(
     state,
     clearedLines,
+    isGarbageClear,
     immobile,
     options
   );
   state.b2b = b2b;
   state.combo = combo;
 
-  if (attack > 0) {
-    const openerphase = state.piecesPlaced < options.openerphase;
-    state.attackQueued.push({ frame, amt: attack, doubled: openerphase });
-  }
+  const doubled = state.piecesPlaced < options.openerphase;
 
-  cancelGarbage(state, options);
+  const attackSegments = surgeAttack;
+  if (attack > 0) attackSegments.push(attack);
+
+  for (const segment of attackSegments) {
+    const bonusAmt = doubled ? segment : 0;
+    const attackLine = fightLines(state, segment, bonusAmt, frame, options);
+    if (attackLine) {
+      state.attackQueued.push(attackLine);
+    }
+  }
 
   if (clearedLines == 0) processGarbageQueued(state, options, frame);
 

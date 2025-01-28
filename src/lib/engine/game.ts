@@ -41,6 +41,7 @@ export const createGameState = (bags: number, seed: number): GameState => {
     rng,
     rngex: getRngSeed(seed),
     lastcolumn: null,
+    iid: 0,
   };
 };
 
