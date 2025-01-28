@@ -2,7 +2,7 @@ import { Round } from "@/lib/types/ttrm";
 import { PlayerBoard } from "./player-board";
 import { Button } from "../ui/button";
 import { useRoundState } from "./hooks/useRoundState";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const FRAME_MS = 16.67;
 
@@ -17,6 +17,8 @@ export const GameRound = ({
   playing: boolean;
   onPlayingChange: (playing: boolean) => void;
 }) => {
+  const [speed, setSpeed] = useState(1);
+
   const { playerStates, handleNextFrame, roundEnded } = useRoundState(round);
   useEffect(() => {
     if (roundEnded) {
@@ -26,7 +28,7 @@ export const GameRound = ({
 
     let intervalId: NodeJS.Timeout | null = null;
     if (playing) {
-      intervalId = setInterval(() => handleNextFrame(1), FRAME_MS);
+      intervalId = setInterval(() => handleNextFrame(speed), FRAME_MS);
     }
 
     return () => {
@@ -36,6 +38,10 @@ export const GameRound = ({
 
   return (
     <div>
+      <Button onClick={() => setSpeed(1)}>1x</Button>
+      <Button onClick={() => setSpeed(2)}>2x</Button>
+      <Button onClick={() => setSpeed(3)}>3x</Button>
+
       <Button onClick={() => onPlayingChange(true)}>Play</Button>
       <Button onClick={() => onPlayingChange(false)}>Pause</Button>
 
