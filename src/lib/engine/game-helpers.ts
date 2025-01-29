@@ -73,9 +73,12 @@ export const calculateAttack = (
     }
   }
 
-  if (b2bCount > 1) {
-    attack += attackTable.b2b;
-    if (options.garbagespecialbonus && isGarbageClear) attack += 1;
+  if (b2bCount > 1) attack += attackTable.b2b;
+
+  const garbageSpecialBonus = options.garbagespecialbonus && isGarbageClear;
+
+  if (b2bCount > 0 && garbageSpecialBonus) {
+    attack += 1;
   }
 
   if (options.combotable === "multiplier") {
