@@ -28,10 +28,9 @@ export const calculateAttack = (
   state: GameState,
   clearedLines: number,
   isGarbageClear: boolean,
-  immobile: boolean,
   options: GameOptions
 ) => {
-  const { b2b, combo, current } = state;
+  const { b2b, combo, current, immobile } = state;
 
   if (clearedLines === 0) {
     return { b2b, attack: 0, combo: 0, surgeAttack: [] };
@@ -45,8 +44,9 @@ export const calculateAttack = (
 
   if (immobile && current.piece === "T") {
     // TODO: tsm is detected as tss
-    if (clearedLines === 1) attack += attackTable.tss;
-    else if (clearedLines === 2) attack += attackTable.tsd;
+    if (clearedLines === 1) {
+      attack += attackTable.tss;
+    } else if (clearedLines === 2) attack += attackTable.tsd;
     else if (clearedLines === 3) attack += attackTable.tst;
     b2bCount++;
   } else {

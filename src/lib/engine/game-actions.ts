@@ -43,7 +43,11 @@ const rotate = (state: GameState, direction: 1 | -1) => {
   const delta = direction === 1 ? 1 : 3;
   const newRotation = ((state.current.rotation + delta) % 4) as Rotation;
   const wallKickData = tryWallKicks(state.board, state.current, newRotation);
-  if (wallKickData.success) state.current = wallKickData.pieceData;
+
+  if (wallKickData.success) {
+    state.current = wallKickData.pieceData;
+    state.immobile = checkImmobile(state.board, state.current);
+  }
 };
 export const rotateCW = (state: GameState) => rotate(state, 1);
 export const rotateCCW = (state: GameState) => rotate(state, -1);
@@ -51,7 +55,10 @@ export const rotate180 = (state: GameState) => {
   if (state.dead) console.error("Cannot act when dead");
   const newRotation = ((state.current.rotation + 2) % 4) as Rotation;
   const wallKickData = tryWallKicks(state.board, state.current, newRotation);
-  if (wallKickData.success) state.current = wallKickData.pieceData;
+  if (wallKickData.success) {
+    state.current = wallKickData.pieceData;
+    state.immobile = checkImmobile(state.board, state.current);
+  }
 };
 
 export const softDrop = (state: GameState) => {
@@ -95,6 +102,7 @@ export const hold = (state: GameState, frame: number) => {
 
   state.canHold = false;
   state.dead = collides;
+  state.immobile = false;
 };
 
 export const hardDrop = (
@@ -105,17 +113,14 @@ export const hardDrop = (
   state.piecesPlaced++;
 
   sonicDrop(state);
-  // note: immobile check must be before placing piece
-  const immobile = checkImmobile(state.board, state.current);
-
   placePiece(state.board, state.current);
+
   const { clearedLines, isGarbageClear } = clearLines(state.board);
 
   let { attack, b2b, combo, surgeAttack } = calculateAttack(
     state,
     clearedLines,
     isGarbageClear,
-    immobile,
     options
   );
   state.b2b = b2b;
@@ -150,6 +155,6 @@ export const hardDrop = (
   );
   state.dead = collides;
   state.current = piece_data;
-
+  state.immobile = false;
   state.canHold = true;
 };
