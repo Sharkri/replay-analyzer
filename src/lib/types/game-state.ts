@@ -35,7 +35,6 @@ export type GameState = {
   rngex: number;
   lastcolumn: null | number;
   iid: number;
-  immobile: boolean;
 };
 
 export type PieceData = {

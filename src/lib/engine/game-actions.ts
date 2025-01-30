@@ -46,7 +46,6 @@ const rotate = (state: GameState, direction: 1 | -1) => {
 
   if (wallKickData.success) {
     state.current = wallKickData.pieceData;
-    state.immobile = checkImmobile(state.board, state.current);
   }
 };
 export const rotateCW = (state: GameState) => rotate(state, 1);
@@ -57,7 +56,6 @@ export const rotate180 = (state: GameState) => {
   const wallKickData = tryWallKicks(state.board, state.current, newRotation);
   if (wallKickData.success) {
     state.current = wallKickData.pieceData;
-    state.immobile = checkImmobile(state.board, state.current);
   }
 };
 
@@ -102,7 +100,6 @@ export const hold = (state: GameState, frame: number) => {
 
   state.canHold = false;
   state.dead = collides;
-  state.immobile = false;
 };
 
 export const hardDrop = (
@@ -111,6 +108,8 @@ export const hardDrop = (
   options: GameOptions
 ) => {
   state.piecesPlaced++;
+
+  const immobile = checkImmobile(state.board, state.current);
 
   sonicDrop(state);
   placePiece(state.board, state.current);
@@ -121,6 +120,7 @@ export const hardDrop = (
     state,
     clearedLines,
     isGarbageClear,
+    immobile,
     options
   );
   state.b2b = b2b;
@@ -155,6 +155,5 @@ export const hardDrop = (
   );
   state.dead = collides;
   state.current = piece_data;
-  state.immobile = false;
   state.canHold = true;
 };

@@ -28,9 +28,10 @@ export const calculateAttack = (
   state: GameState,
   clearedLines: number,
   isGarbageClear: boolean,
+  immobile: boolean,
   options: GameOptions
 ) => {
-  const { b2b, combo, current, immobile } = state;
+  const { b2b, combo, current } = state;
 
   if (clearedLines === 0) {
     return { b2b, attack: 0, combo: 0, surgeAttack: [] };
