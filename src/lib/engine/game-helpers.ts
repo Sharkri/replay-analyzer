@@ -26,14 +26,14 @@ function splitAttack(amt: number) {
 
 export const calculateAttack = (
   state: GameState,
-  clearedLines: number,
+  lineCount: number,
   isGarbageClear: boolean,
   immobile: boolean,
   options: GameOptions
 ) => {
   const { b2b, combo, current } = state;
 
-  if (clearedLines === 0) {
+  if (lineCount === 0) {
     return { b2b, attack: 0, combo: 0, surgeAttack: [] };
   }
 
@@ -43,19 +43,25 @@ export const calculateAttack = (
   let b2bCount = b2b;
   let newCombo = combo + 1;
 
-  if (immobile && current.piece === "T") {
-    // TODO: tsm is detected as tss
-    if (clearedLines === 1) {
-      attack += attackTable.tss;
-    } else if (clearedLines === 2) attack += attackTable.tsd;
-    else if (clearedLines === 3) attack += attackTable.tst;
+  if (state.tspinType !== null) {
+    const m = state.tspinType === "mini";
+
+    if (lineCount === 1) attack += m ? attackTable.tsm : attackTable.tss;
+    else if (lineCount === 2) attack += m ? attackTable.tsmd : attackTable.tsd;
+    else if (lineCount === 3) attack += attackTable.tst;
+
     b2bCount++;
   } else {
-    switch (clearedLines) {
+    switch (lineCount) {
       case 1:
         attack += attackTable.single;
-        if (options.spinbonuses.includes("all-mini") && immobile) b2bCount++;
-        else b2bCount = 0;
+        if (
+          (options.spinbonuses === "all-mini+" ||
+            (options.spinbonuses === "all-mini" && current.piece !== "T")) &&
+          immobile
+        ) {
+          b2bCount++;
+        } else b2bCount = 0;
         break;
       case 2:
         attack += attackTable.double;

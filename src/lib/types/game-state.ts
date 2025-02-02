@@ -35,6 +35,7 @@ export type GameState = {
   rngex: number;
   lastcolumn: null | number;
   iid: number;
+  tspinType: "mini" | "full" | null;
 };
 
 export type PieceData = {

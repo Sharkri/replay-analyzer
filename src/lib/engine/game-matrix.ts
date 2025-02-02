@@ -42,6 +42,65 @@ export const checkImmobile = (board: Board, pieceData: PieceData) => {
   return true;
 };
 
+// Based on https://four.lol/srs/t-spin
+export const isTSpin = (
+  board: Board,
+  target: PieceData,
+  kickIndex: number,
+  rotationToFrom: string
+) => {
+  if (target.piece !== "T") return null;
+
+  const cornerOffsets = [
+    [-1, -1], // Top-left corner
+    [1, -1], // Top-right corner
+    [-1, 1], // Bottom-left corner
+    [1, 1], // Bottom-right corner
+  ];
+
+  let occupiedCorners = 0;
+  let facingCorners = 0;
+
+  // Offset to correctly position the T-piece
+  const offsetX = target.x + 1;
+  const offsetY = target.y - 1;
+
+  for (let i = 0; i < cornerOffsets.length; i++) {
+    const [cx, cy] = cornerOffsets[i];
+    const x = offsetX + cx;
+    const y = offsetY + cy;
+
+    const isOccupied = y < 0 || (board[y] && board[y][x] !== null);
+
+    if (isOccupied) {
+      occupiedCorners++;
+
+      // check if occupied cell is facing the t-piece
+      if (
+        (target.rotation === 0 && cy === 1) ||
+        (target.rotation === 1 && cx === 1) ||
+        (target.rotation === 2 && cy === -1) ||
+        (target.rotation === 3 && cx === -1)
+      ) {
+        facingCorners++;
+      }
+    }
+  }
+
+  if (occupiedCorners < 3) {
+    return null;
+  }
+
+  if (
+    facingCorners === 2 ||
+    (kickIndex === 4 && ["03", "01", "23", "21"].includes(rotationToFrom))
+  ) {
+    return "full"; // Full T-spin if facing 2 corners or using special kicks (like TST)
+  }
+
+  return "mini"; // Otherwise, classify as a mini T-spin
+};
+
 export const clearLines = (board: Board) => {
   let clearedLines = 0;
   let isGarbageClear = false;
@@ -69,19 +128,20 @@ export const tryWallKicks = (
   const newPieceData = { ...pieceData, rotation };
   const wallKicks = newPieceData.piece === "I" ? I_KICKS : WALLKICKS;
 
-  const kickData = wallKicks[`${pieceData.rotation}${rotation}`]!;
+  const rotationToFrom = `${pieceData.rotation}${rotation}`;
+  const kickData = wallKicks[rotationToFrom]!;
 
-  for (const [x, y] of kickData) {
+  for (const [index, [x, y]] of kickData.entries()) {
     newPieceData.x += x;
     newPieceData.y += y;
     if (!checkCollision(board, newPieceData)) {
-      return { pieceData: newPieceData, success: true };
+      return { pieceData: newPieceData, success: true, index, rotationToFrom };
     }
     newPieceData.x -= x;
     newPieceData.y -= y;
   }
 
-  return { pieceData: newPieceData, success: false };
+  return { pieceData: newPieceData, success: false, index: 0, rotationToFrom };
 };
 
 export const spawnPiece = (board: Board, piece: Piece, frame: number) => {

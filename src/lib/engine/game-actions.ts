@@ -9,6 +9,7 @@ import {
   checkCollision,
   checkImmobile,
   clearLines,
+  isTSpin,
   placePiece,
   spawnPiece,
   tryWallKicks,
@@ -46,6 +47,12 @@ const rotate = (state: GameState, direction: 1 | -1) => {
 
   if (wallKickData.success) {
     state.current = wallKickData.pieceData;
+    state.tspinType = isTSpin(
+      state.board,
+      state.current,
+      wallKickData.index,
+      wallKickData.rotationToFrom
+    );
   }
 };
 export const rotateCW = (state: GameState) => rotate(state, 1);
@@ -56,6 +63,12 @@ export const rotate180 = (state: GameState) => {
   const wallKickData = tryWallKicks(state.board, state.current, newRotation);
   if (wallKickData.success) {
     state.current = wallKickData.pieceData;
+    state.tspinType = isTSpin(
+      state.board,
+      state.current,
+      wallKickData.index,
+      wallKickData.rotationToFrom
+    );
   }
 };
 

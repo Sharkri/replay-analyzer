@@ -10,6 +10,8 @@ export const ATTACK_TABLE = {
   triple: 2,
   quad: 4,
   tsd: 4,
+  tsm: 0,
+  tsmd: 1,
   tss: 2,
   tst: 6,
   pc: 10,
