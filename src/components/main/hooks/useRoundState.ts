@@ -29,25 +29,25 @@ const priorityMap: Record<GameCommand, number> = {
   hold: -1,
 };
 
-export const useRoundState = (round: Round[]) => {
+const initializePlayerState = (player: Round) => {
+  const { seed } = player.replay.options;
+  const gameState = createGameState(1, seed);
+  const heldKeys = {
+    moveLeft: null,
+    moveRight: null,
+    softDrop: null,
+  } as HeldKeys;
+  return { heldKeys, eventIndex: 0, currFrame: 0, gameState };
+};
+
+export const useRoundState = (roundPlayers: Round[]) => {
   const [playerStates, setPlayerStates] = useState<PlayerState[]>(
-    round.map((player) => {
-      const { seed } = player.replay.options;
-
-      const gameState = createGameState(1, seed);
-      const heldKeys = {
-        moveLeft: null,
-        moveRight: null,
-        softDrop: null,
-      } as HeldKeys;
-
-      return { heldKeys, eventIndex: 0, currFrame: 0, gameState };
-    })
+    roundPlayers.map(initializePlayerState)
   );
   const [roundEnded, setRoundEnded] = useState(false);
 
   useEffect(() => {
-    round.map((r) => {
+    roundPlayers.map((r) => {
       r.replay.events.sort((a, b) => {
         const frameDiff = a.frame - b.frame;
         if (frameDiff !== 0) return frameDiff;
@@ -63,7 +63,7 @@ export const useRoundState = (round: Round[]) => {
       });
       return r;
     });
-  }, [round]);
+  }, [roundPlayers]);
 
   const processEvent = useCallback(
     (
@@ -168,13 +168,32 @@ export const useRoundState = (round: Round[]) => {
     (frameIncrement: number) => {
       setPlayerStates((prevStates) => {
         return prevStates.map((state, idx) => {
-          const newState = processNextFrame(state, round[idx], frameIncrement);
+          const newState = processNextFrame(
+            state,
+            roundPlayers[idx],
+            frameIncrement
+          );
           return newState;
         });
       });
     },
-    [round, processNextFrame]
+    [roundPlayers]
   );
 
-  return { playerStates, handleNextFrame, roundEnded };
+  const handleBackFrame = useCallback(
+    (frameBack: number) => {
+      setPlayerStates((prevStates) => {
+        return prevStates.map((state, idx) => {
+          const targetFrame = Math.max(state.currFrame - frameBack, 0);
+          const player = roundPlayers[idx];
+          const initialState = initializePlayerState(player);
+          const newState = processNextFrame(initialState, player, targetFrame);
+          return newState;
+        });
+      });
+    },
+    [roundPlayers]
+  );
+
+  return { playerStates, handleNextFrame, roundEnded, handleBackFrame };
 };

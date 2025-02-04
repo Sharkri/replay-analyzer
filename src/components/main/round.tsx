@@ -19,7 +19,8 @@ export const GameRound = ({
 }) => {
   const [speed, setSpeed] = useState(1);
 
-  const { playerStates, handleNextFrame, roundEnded } = useRoundState(round);
+  const { playerStates, handleNextFrame, roundEnded, handleBackFrame } =
+    useRoundState(round);
   useEffect(() => {
     if (roundEnded) {
       onNextRound();
@@ -47,6 +48,7 @@ export const GameRound = ({
 
       <Button onClick={() => handleNextFrame(FRAME_MS)}>Advance Both</Button>
       <Button onClick={() => handleNextFrame(1)}>Advance Both tiny</Button>
+      <Button onClick={() => handleBackFrame(FRAME_MS)}>Back Both</Button>
 
       <Button onClick={() => console.log(playerStates)}>
         Log playerStates
