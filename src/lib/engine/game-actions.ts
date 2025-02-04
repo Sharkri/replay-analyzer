@@ -113,6 +113,7 @@ export const hold = (state: GameState, frame: number) => {
 
   state.canHold = false;
   state.dead = collides;
+  state.tspinType = null;
 };
 
 export const hardDrop = (
@@ -169,4 +170,5 @@ export const hardDrop = (
   state.dead = collides;
   state.current = piece_data;
   state.canHold = true;
+  state.tspinType = null;
 };
