@@ -48,6 +48,10 @@ export const GameRound = ({
       <Button onClick={() => handleNextFrame(FRAME_MS)}>Advance Both</Button>
       <Button onClick={() => handleNextFrame(1)}>Advance Both tiny</Button>
 
+      <Button onClick={() => console.log(playerStates)}>
+        Log playerStates
+      </Button>
+
       <div className="flex flex-wrap">
         {round.map((player, index) => (
           <PlayerBoard

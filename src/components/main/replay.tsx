@@ -20,6 +20,7 @@ export const GameReplay = ({ replay }: { replay: Replay }) => {
   return (
     <div>
       <Button onClick={handleNextRound}>Next Round</Button>
+      <div>Current Round: {roundIndex}</div>
 
       <div className="flex flex-wrap">
         <GameRound

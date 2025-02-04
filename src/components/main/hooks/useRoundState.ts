@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { Round, ReplayEvent, Handling } from "@/lib/types/ttrm";
+import { useState, useCallback, useEffect } from "react";
+import { Round, ReplayEvent, Handling, GameCommand } from "@/lib/types/ttrm";
 import { Command, createGameState, executeCommands } from "@/lib/engine/game";
 import {
   getHeldKeyCommands,
@@ -18,6 +18,17 @@ type PlayerState = {
   gameState: GameState;
 };
 
+const priorityMap: Record<GameCommand, number> = {
+  moveRight: -2,
+  moveLeft: -2,
+  softDrop: -1,
+  hardDrop: -1,
+  rotateCW: -1,
+  rotateCCW: -1,
+  rotate180: -1,
+  hold: -1,
+};
+
 export const useRoundState = (round: Round[]) => {
   const [playerStates, setPlayerStates] = useState<PlayerState[]>(
     round.map((player) => {
@@ -34,6 +45,25 @@ export const useRoundState = (round: Round[]) => {
     })
   );
   const [roundEnded, setRoundEnded] = useState(false);
+
+  useEffect(() => {
+    round.map((r) => {
+      r.replay.events.sort((a, b) => {
+        const frameDiff = a.frame - b.frame;
+        if (frameDiff !== 0) return frameDiff;
+        if (
+          (a.type !== "keydown" && a.type !== "keyup") ||
+          (b.type !== "keydown" && b.type !== "keyup")
+        ) {
+          return 0;
+        }
+        const subframeDiff = (a.data.subframe || 0) - (b.data.subframe || 0);
+        if (subframeDiff !== 0) return subframeDiff;
+        return priorityMap[a.data.key] - priorityMap[b.data.key];
+      });
+      return r;
+    });
+  }, [round]);
 
   const processEvent = useCallback(
     (
@@ -103,6 +133,11 @@ export const useRoundState = (round: Round[]) => {
       if (event.frame > spawnFrame && isInitialY) commands.push("drop");
 
       if (event.frame === p.currFrame) {
+        if (event.type === "end") {
+          setRoundEnded(true);
+          break;
+        }
+
         const res = processEvent(
           event,
           p.heldKeys,
