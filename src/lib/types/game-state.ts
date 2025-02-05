@@ -38,13 +38,13 @@ export type GameState = {
   tspinType: "mini" | "full" | null;
   locking: number;
   lockResets: number;
-  lowestY: number;
 };
 
 export type PieceData = {
   piece: Piece;
   x: number;
   y: number;
+  lowest: number;
   rotation: Rotation;
   spawnFrame: number;
 };

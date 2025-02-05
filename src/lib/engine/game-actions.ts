@@ -26,6 +26,7 @@ export const moveLeft = (state: GameState) => {
   }
 
   state.lockResets += 1;
+  state.locking = 0;
 
   return true;
 };
@@ -39,6 +40,7 @@ export const moveRight = (state: GameState) => {
   }
 
   state.lockResets += 1;
+  state.locking = 0;
 
   return true;
 };
@@ -59,6 +61,7 @@ const rotate = (state: GameState, direction: 1 | -1) => {
     );
 
     state.lockResets += 1;
+    state.locking = 0;
   }
 };
 export const rotateCW = (state: GameState) => rotate(state, 1);
@@ -77,16 +80,13 @@ export const rotate180 = (state: GameState) => {
     );
 
     state.lockResets += 1;
+    state.locking = 0;
   }
 };
 
 export const softDrop = (state: GameState) => {
   if (state.dead) console.error("Cannot act when dead");
-
-  while (!checkCollision(state.board, state.current)) {
-    state.current.y -= 1;
-  }
-  state.current.y += 1;
+  while (drop(state)) {}
 };
 export const drop = (state: GameState) => {
   if (state.dead) console.error("Cannot act when dead");
@@ -95,16 +95,20 @@ export const drop = (state: GameState) => {
 
   if (checkCollision(state.board, state.current)) {
     state.current.y += 1;
+    return false;
   }
-};
+  // handle lock resets
+  if (state.current.y < state.current.lowest) {
+    state.current.lowest = state.current.y;
+    state.lockResets = 0;
+  }
+  state.locking = 0;
 
+  return true;
+};
 export const sonicDrop = (state: GameState) => {
   if (state.dead) console.error("Cannot act when dead");
-
-  while (!checkCollision(state.board, state.current)) {
-    state.current.y -= 1;
-  }
-  state.current.y += 1;
+  while (drop(state)) {}
 };
 
 export const hold = (state: GameState, frame: number) => {
@@ -122,7 +126,6 @@ export const hold = (state: GameState, frame: number) => {
   state.canHold = false;
   state.dead = collides;
   state.tspinType = null;
-  state.lowestY = Infinity;
   state.lockResets = 0;
   state.locking = 0;
 };
@@ -182,7 +185,6 @@ export const hardDrop = (
   state.current = piece_data;
   state.canHold = true;
   state.tspinType = null;
-  state.lowestY = Infinity;
   state.lockResets = 0;
   state.locking = 0;
 };

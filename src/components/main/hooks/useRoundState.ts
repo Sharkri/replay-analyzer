@@ -129,18 +129,13 @@ export const useRoundState = (roundPlayers: Round[]) => {
 
       const commands: Command[] = [];
 
-      // Reset lockResets if current y decreases
-      if (p.gameState.current.y < p.gameState.lowestY) {
-        p.gameState.lowestY = p.gameState.current.y;
-        p.gameState.lockResets = 0;
-      }
-
       const isFloor = checkCollision(p.gameState.board, {
         ...p.gameState.current,
         y: p.gameState.current.y - 1,
       });
       if (isFloor) {
         p.gameState.locking++;
+
         if (
           p.gameState.locking >= options.locktime ||
           p.gameState.lockResets >= 15
@@ -148,8 +143,6 @@ export const useRoundState = (roundPlayers: Round[]) => {
           hardDrop(p.gameState, p.currFrame, options);
           p.gameState.locking = 0;
         }
-      } else {
-        p.gameState.locking = 0;
       }
 
       const { y, spawnFrame } = p.gameState.current;

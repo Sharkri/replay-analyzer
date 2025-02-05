@@ -12,6 +12,7 @@ export const BoardQueue = ({ queue }: { queue: Piece[] }) => {
         piece,
         rotation: 0,
         spawnFrame: 0,
+        lowest: 0,
       }}
     />
   ));

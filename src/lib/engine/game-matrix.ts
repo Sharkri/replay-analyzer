@@ -152,6 +152,7 @@ export const spawnPiece = (board: Board, piece: Piece, frame: number) => {
     y: PIECE_SPAWN,
     rotation: 0 as Rotation,
     spawnFrame: frame,
+    lowest: PIECE_SPAWN,
   };
   const collides = board.length > 16 && checkCollision(board, piece_data);
 

@@ -55,6 +55,7 @@ const BoardCanvas = ({ gameState }: { gameState: GameState }) => {
             rotation: 0,
             piece: gameState.held,
             spawnFrame: 0,
+            lowest: 0,
           }}
         />
       )}
