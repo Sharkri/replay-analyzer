@@ -80,7 +80,6 @@ export const useRoundState = (roundPlayers: Round[]) => {
 
       switch (event.type) {
         case "start":
-          console.log(`Game started at frame ${event.frame}`);
           break;
         case "keydown":
           commands.push(...getHeldKeyCommands(event, heldKeys, handling));
@@ -134,8 +133,6 @@ export const useRoundState = (roundPlayers: Round[]) => {
         y: p.gameState.current.y - 1,
       });
       if (isFloor) {
-        p.gameState.locking++;
-
         if (
           p.gameState.locking >= options.locktime ||
           p.gameState.lockResets >= 15
@@ -143,6 +140,8 @@ export const useRoundState = (roundPlayers: Round[]) => {
           hardDrop(p.gameState, p.currFrame, options);
           p.gameState.locking = 0;
         }
+
+        p.gameState.locking++;
       }
 
       const { y, spawnFrame } = p.gameState.current;
