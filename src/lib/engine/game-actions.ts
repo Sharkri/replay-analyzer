@@ -25,6 +25,8 @@ export const moveLeft = (state: GameState) => {
     return false;
   }
 
+  state.lockResets += 1;
+
   return true;
 };
 export const moveRight = (state: GameState) => {
@@ -35,6 +37,8 @@ export const moveRight = (state: GameState) => {
     state.current.x -= 1;
     return false;
   }
+
+  state.lockResets += 1;
 
   return true;
 };
@@ -53,6 +57,8 @@ const rotate = (state: GameState, direction: 1 | -1) => {
       wallKickData.index,
       wallKickData.rotationToFrom
     );
+
+    state.lockResets += 1;
   }
 };
 export const rotateCW = (state: GameState) => rotate(state, 1);
@@ -69,6 +75,8 @@ export const rotate180 = (state: GameState) => {
       wallKickData.index,
       wallKickData.rotationToFrom
     );
+
+    state.lockResets += 1;
   }
 };
 
@@ -114,6 +122,9 @@ export const hold = (state: GameState, frame: number) => {
   state.canHold = false;
   state.dead = collides;
   state.tspinType = null;
+  state.lowestY = Infinity;
+  state.lockResets = 0;
+  state.locking = 0;
 };
 
 export const hardDrop = (
@@ -171,4 +182,7 @@ export const hardDrop = (
   state.current = piece_data;
   state.canHold = true;
   state.tspinType = null;
+  state.lowestY = Infinity;
+  state.lockResets = 0;
+  state.locking = 0;
 };

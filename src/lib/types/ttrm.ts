@@ -139,6 +139,7 @@ export const optionsSchema = z.object({
   allclear_garbage: z.number().default(10),
   combotable: z.enum(["multiplier", "none"]).default("multiplier"),
   garbagespecialbonus: z.boolean().default(false),
+  locktime: z.number().default(30),
 });
 
 export const roundReplaySchema = z.object({

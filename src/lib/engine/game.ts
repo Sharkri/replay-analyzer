@@ -43,6 +43,9 @@ export const createGameState = (bags: number, seed: number): GameState => {
     lastcolumn: null,
     iid: 0,
     tspinType: null,
+    locking: 0,
+    lockResets: 0,
+    lowestY: Infinity,
   };
 };
 

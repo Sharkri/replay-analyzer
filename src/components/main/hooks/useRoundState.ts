@@ -10,6 +10,8 @@ import {
 } from "@/lib/engine/event-replay";
 import { GameState } from "@/lib/types/game-state";
 import { PIECE_SPAWN } from "@/lib/engine/game-options";
+import { checkCollision } from "@/lib/engine/game-matrix";
+import { hardDrop } from "@/lib/engine/game-actions";
 
 type PlayerState = {
   heldKeys: HeldKeys;
@@ -127,6 +129,29 @@ export const useRoundState = (roundPlayers: Round[]) => {
 
       const commands: Command[] = [];
 
+      // Reset lockResets if current y decreases
+      if (p.gameState.current.y < p.gameState.lowestY) {
+        p.gameState.lowestY = p.gameState.current.y;
+        p.gameState.lockResets = 0;
+      }
+
+      const isFloor = checkCollision(p.gameState.board, {
+        ...p.gameState.current,
+        y: p.gameState.current.y - 1,
+      });
+      if (isFloor) {
+        p.gameState.locking++;
+        if (
+          p.gameState.locking >= options.locktime ||
+          p.gameState.lockResets >= 15
+        ) {
+          hardDrop(p.gameState, p.currFrame, options);
+          p.gameState.locking = 0;
+        }
+      } else {
+        p.gameState.locking = 0;
+      }
+
       const { y, spawnFrame } = p.gameState.current;
 
       const isInitialY = y === PIECE_SPAWN; // initial tick of gravity
@@ -151,14 +176,12 @@ export const useRoundState = (roundPlayers: Round[]) => {
         p.currFrame++;
       }
 
-      if (commands.length > 0) {
-        p.gameState = executeCommands(
-          commands,
-          p.gameState,
-          event.frame,
-          options
-        );
-      }
+      p.gameState = executeCommands(
+        commands,
+        p.gameState,
+        event.frame,
+        options
+      );
     }
 
     return p;

@@ -36,6 +36,9 @@ export type GameState = {
   lastcolumn: null | number;
   iid: number;
   tspinType: "mini" | "full" | null;
+  locking: number;
+  lockResets: number;
+  lowestY: number;
 };
 
 export type PieceData = {
